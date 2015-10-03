@@ -3,15 +3,17 @@ package main
 import (
 	"errors"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/BurntSushi/toml"
+	"gopkg.in/yaml.v2"
 )
 
 // Config holds all configuration for grobi.
 type Config struct {
-	DefaultAction string
+	DefaultAction string `yaml:"default_action"`
+	Rules         []Rule
 }
 
 // xdgConfigDir returns the config directory according to the xdg standard, see
@@ -46,8 +48,13 @@ func readConfig() (Config, error) {
 		return Config{}, err
 	}
 
+	buf, err := ioutil.ReadAll(rd)
+	if err != nil {
+		return Config{}, err
+	}
+	
 	var cfg Config
-	_, err = toml.DecodeReader(rd, &cfg)
+	err = yaml.Unmarshal(buf, &cfg)
 	if err != nil {
 		return Config{}, err
 	}

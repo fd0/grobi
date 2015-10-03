@@ -6,14 +6,28 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"os/exec"
 	"strings"
 )
 
 // Output encapsulates a physical output with detected modes.
 type Output struct {
 	Name      string
-	Modes     []Mode
+	Modes     Modes
 	Connected bool
+}
+
+func (o Output) String() string {
+	var con string
+	if o.Connected {
+		con = " (connected)"
+	}
+	str := fmt.Sprintf("%s%s", o.Name, con)
+	if len(o.Modes) > 0 {
+		str += fmt.Sprintf(" %v", o.Modes)
+	}
+	return str
 }
 
 // Mode is an output mode that may be active or default.
@@ -23,14 +37,39 @@ type Mode struct {
 	Active  bool
 }
 
+func (m Mode) String() string {
+	var suffix string
+
+	if m.Active {
+		suffix += "*"
+	}
+
+	if m.Default {
+		suffix += "+"
+	}
+
+	return m.Name + suffix
+}
+
+// Modes is a list of Mode.
+type Modes []Mode
+
+func (m Modes) String() string {
+	var str []string
+	for _, mode := range m {
+		str = append(str, mode.String())
+	}
+	return strings.Join(str, " ")
+}
+
 var (
-	// ErrNotModeLine is returned by ParseModeLine when the line doesn't match
+	// errNotModeLine is returned by parseModeLine when the line doesn't match
 	// the format for a mode line.
-	ErrNotModeLine = errors.New("not a mode line")
+	errNotModeLine = errors.New("not a mode line")
 )
 
-// ParseOutputLine returns the output parsed from the string.
-func ParseOutputLine(line string) (Output, error) {
+// parseOutputLine returns the output parsed from the string.
+func parseOutputLine(line string) (Output, error) {
 	output := Output{}
 
 	ws := bufio.NewScanner(bytes.NewReader([]byte(line)))
@@ -57,10 +96,10 @@ func ParseOutputLine(line string) (Output, error) {
 	return output, nil
 }
 
-// ParseModeLine returns the mode parsed from the string.
-func ParseModeLine(line string) (mode Mode, err error) {
+// parseModeLine returns the mode parsed from the string.
+func parseModeLine(line string) (mode Mode, err error) {
 	if !strings.HasPrefix(line, "  ") {
-		return Mode{}, ErrNotModeLine
+		return Mode{}, errNotModeLine
 	}
 
 	ws := bufio.NewScanner(bytes.NewReader([]byte(line)))
@@ -121,7 +160,7 @@ nextLine:
 				return nil, fmt.Errorf(`first line should start with "Screen", found: %v`, line)
 
 			case StateOutput:
-				output, err = ParseOutputLine(line)
+				output, err = parseOutputLine(line)
 				if err != nil {
 					return nil, err
 				}
@@ -129,8 +168,8 @@ nextLine:
 				continue nextLine
 
 			case StateMode:
-				mode, err := ParseModeLine(line)
-				if err == ErrNotModeLine {
+				mode, err := parseModeLine(line)
+				if err == errNotModeLine {
 					outputs = append(outputs, output)
 					output = Output{}
 					state = StateOutput
@@ -152,4 +191,16 @@ nextLine:
 	}
 
 	return outputs, nil
+}
+
+// GetOutputs runs `xrandr` and returns the parsed output.
+func GetOutputs() ([]Output, error) {
+	cmd := exec.Command("xrandr")
+	cmd.Stderr = os.Stderr
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	return RandrParse(bytes.NewReader(output))
 }

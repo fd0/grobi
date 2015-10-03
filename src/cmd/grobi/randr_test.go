@@ -240,7 +240,7 @@ var TestOutputLines = []struct {
 
 func TestParseOutputLine(t *testing.T) {
 	for i, test := range TestOutputLines {
-		out, err := ParseOutputLine(test.line)
+		out, err := parseOutputLine(test.line)
 		if err != nil {
 			t.Errorf("test %d returned error: %v", i, err)
 			continue
@@ -294,7 +294,7 @@ var TestModeLines = []struct {
 
 func TestParseModeLine(t *testing.T) {
 	for i, test := range TestModeLines {
-		mode, err := ParseModeLine(test.line)
+		mode, err := parseModeLine(test.line)
 		if err != nil {
 			t.Errorf("test %d returned error: %v", i, err)
 			continue
