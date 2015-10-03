@@ -1,0 +1,23 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/BurntSushi/toml",
+			"repository": "https://github.com/BurntSushi/toml",
+			"revision": "056c9bc7be7190eaa7715723883caffa5f8fa3e4",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/davecgh/go-spew",
+			"repository": "https://github.com/davecgh/go-spew",
+			"revision": "2df174808ee097f90d259e432cc04442cf60be21",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/proxypoke/i3ipc",
+			"repository": "https://github.com/proxypoke/i3ipc",
+			"revision": "de8f6bb6b583a14ca2164f0e1a8f9bea2c7e120e",
+			"branch": "master"
+		}
+	]
+}
