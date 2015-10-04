@@ -14,5 +14,4 @@ install:
   - gb vendor restore
 
 script:
-  - gb test -v cmd/grobi
   - go run build.go
