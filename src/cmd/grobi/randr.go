@@ -30,6 +30,30 @@ func (o Output) String() string {
 	return str
 }
 
+// Outputs is a list of outputs.
+type Outputs []Output
+
+// Present returns true iff the list of outputs contains the named output.
+func (os Outputs) Present(name string) bool {
+	for _, o := range os {
+		if o.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+// Connected returns true iff the list of outputs contains the named output and
+// it is connected.
+func (os Outputs) Connected(name string) bool {
+	for _, o := range os {
+		if o.Name == name {
+			return o.Connected
+		}
+	}
+	return false
+}
+
 // Mode is an output mode that may be active or default.
 type Mode struct {
 	Name    string
@@ -62,11 +86,9 @@ func (m Modes) String() string {
 	return strings.Join(str, " ")
 }
 
-var (
-	// errNotModeLine is returned by parseModeLine when the line doesn't match
-	// the format for a mode line.
-	errNotModeLine = errors.New("not a mode line")
-)
+// errNotModeLine is returned by parseModeLine when the line doesn't match
+// the format for a mode line.
+var errNotModeLine = errors.New("not a mode line")
 
 // parseOutputLine returns the output parsed from the string.
 func parseOutputLine(line string) (Output, error) {
@@ -132,7 +154,7 @@ func parseModeLine(line string) (mode Mode, err error) {
 }
 
 // RandrParse returns the list of outputs parsed from the reader.
-func RandrParse(rd io.Reader) (outputs []Output, err error) {
+func RandrParse(rd io.Reader) (outputs Outputs, err error) {
 	ls := bufio.NewScanner(rd)
 
 	const (
@@ -194,8 +216,8 @@ nextLine:
 }
 
 // GetOutputs runs `xrandr` and returns the parsed output.
-func GetOutputs() ([]Output, error) {
-	cmd := exec.Command("xrandr")
+func GetOutputs() (Outputs, error) {
+	cmd := exec.Command("xrandr", "--query")
 	cmd.Stderr = os.Stderr
 	output, err := cmd.Output()
 	if err != nil {

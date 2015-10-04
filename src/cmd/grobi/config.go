@@ -28,14 +28,15 @@ func xdgConfigDir() string {
 
 // openConfigFile returns a reader for the config file.
 func openConfigFile() (io.ReadCloser, error) {
-	filename := filepath.Join(xdgConfigDir(), "grobi.conf")
-	if f, err := os.Open(filename); err == nil {
-		return f, nil
-	}
-
-	filename = filepath.Join(os.Getenv("HOME"), ".grobi.conf")
-	if f, err := os.Open(filename); err == nil {
-		return f, nil
+	for _, filename := range []string{
+		os.Getenv("GROBI_CONFIG"),
+		filepath.Join(xdgConfigDir(), "grobi.conf"),
+		filepath.Join(os.Getenv("HOME"), ".grobi.conf")} {
+		if filename != "" {
+			if f, err := os.Open(filename); err == nil {
+				return f, nil
+			}
+		}
 	}
 
 	return nil, errors.New("could not find config file")
@@ -52,7 +53,7 @@ func readConfig() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	
+
 	var cfg Config
 	err = yaml.Unmarshal(buf, &cfg)
 	if err != nil {
@@ -66,3 +67,4 @@ func readConfig() (Config, error) {
 
 	return cfg, nil
 }
+
