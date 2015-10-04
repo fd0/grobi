@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/proxypoke/i3ipc"
 )
@@ -24,11 +23,12 @@ func (cmd CmdWatch) Execute(args []string) error {
 
 	ch, err := i3ipc.Subscribe(i3ipc.I3OutputEvent)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "unable to connect to i3: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("unable to connect to i3: %v", err)
 	}
 
 	verbosePrintf("successfully subscribed to the i3 IPC socket\n")
+
+nextEvent:
 	for range ch {
 		fmt.Printf("received output change event\n")
 
@@ -40,12 +40,13 @@ func (cmd CmdWatch) Execute(args []string) error {
 		for _, rule := range globalOpts.cfg.Rules {
 			if rule.Match(outputs) {
 				verbosePrintf("found matching rule (name %v)\n", rule.Name)
-				return ApplyRule(outputs, rule)
+				if err = ApplyRule(outputs, rule); err != nil {
+					return err
+				}
+				continue nextEvent
 			}
 		}
 	}
-
-	fmt.Printf("done\n")
 
 	return nil
 }
