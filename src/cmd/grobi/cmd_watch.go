@@ -44,32 +44,47 @@ func (cmd CmdWatch) Execute(args []string) error {
 
 	verbosePrintf("successfully subscribed to the i3 IPC socket\n")
 
-	ticker := time.NewTicker(2 * time.Second)
+	var tickerCh <-chan time.Time
+	if globalOpts.PollInterval > 0 {
+		tickerCh = time.NewTicker(time.Duration(globalOpts.PollInterval) * time.Second).C
+	}
+
+	var backoffCh <-chan time.Time
+	var disablePoll bool
 
 	var lastOutputs Outputs
 	for {
+		if !disablePoll {
+			newOutputs, err := GetOutputs()
+			if err != nil {
+				return err
+			}
+
+			if !lastOutputs.Equals(newOutputs) {
+				err = MatchRules(globalOpts.cfg.Rules, newOutputs)
+				if err != nil {
+					return err
+				}
+
+				lastOutputs = newOutputs
+
+				if globalOpts.Pause > 0 {
+					verbosePrintf("disable polling for %d seconds\n", globalOpts.Pause)
+					disablePoll = true
+					backoffCh = time.After(time.Duration(globalOpts.Pause) * time.Second)
+				}
+			}
+		}
+
 		select {
 		case <-ch:
 			verbosePrintf("new output change event from i3 received\n")
-		case <-ticker.C:
+		case <-tickerCh:
 			verbosePrintf("regularly checking xrandr\n")
+		case <- backoffCh:
+			verbosePrintf("reenable polling\n")
+			backoffCh = nil
+			disablePoll = false
 		}
-
-		newOutputs, err := GetOutputs()
-		if err != nil {
-			return err
-		}
-
-		if lastOutputs.Equals(newOutputs) {
-			verbosePrintf("nothing has changed, continuing\n")
-			continue
-		}
-
-		err = MatchRules(globalOpts.cfg.Rules, newOutputs)
-		if err != nil {
-			return err
-		}
-
-		lastOutputs = newOutputs
 	}
 }

@@ -20,13 +20,5 @@ func (cmd CmdUpdate) Execute(args []string) error {
 		return err
 	}
 
-	for _, rule := range globalOpts.cfg.Rules {
-		if rule.Match(outputs) {
-			verbosePrintf("found matching rule (name %v)\n", rule.Name)
-			return ApplyRule(outputs, rule)
-		}
-	}
-
-	verbosePrintf("no rules match the current configuration\n")
-	return nil
+	return MatchRules(globalOpts.cfg.Rules, outputs)
 }
