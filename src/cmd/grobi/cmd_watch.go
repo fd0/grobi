@@ -19,21 +19,6 @@ func init() {
 	}
 }
 
-func MatchRules(rules []Rule, outputs Outputs) error {
-	for _, rule := range rules {
-		if rule.Match(outputs) {
-			verbosePrintf("found matching rule (name %v)\n", rule.Name)
-			if err := ApplyRule(outputs, rule); err != nil {
-				return err
-			}
-
-			return nil
-		}
-	}
-
-	return nil
-}
-
 func (cmd CmdWatch) Execute(args []string) error {
 	globalOpts.ReadConfigfile()
 
@@ -81,7 +66,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 			verbosePrintf("new output change event from i3 received\n")
 		case <-tickerCh:
 			verbosePrintf("regularly checking xrandr\n")
-		case <- backoffCh:
+		case <-backoffCh:
 			verbosePrintf("reenable polling\n")
 			backoffCh = nil
 			disablePoll = false

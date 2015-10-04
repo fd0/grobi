@@ -12,6 +12,21 @@ func init() {
 	}
 }
 
+func MatchRules(rules []Rule, outputs Outputs) error {
+	for _, rule := range rules {
+		if rule.Match(outputs) {
+			verbosePrintf("found matching rule (name %v)\n", rule.Name)
+			if err := ApplyRule(outputs, rule); err != nil {
+				return err
+			}
+
+			return nil
+		}
+	}
+
+	return nil
+}
+
 func (cmd CmdUpdate) Execute(args []string) error {
 	globalOpts.ReadConfigfile()
 

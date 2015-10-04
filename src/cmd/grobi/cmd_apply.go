@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -36,13 +37,20 @@ func ApplyRule(outputs Outputs, rule Rule) error {
 		return fmt.Errorf("no output configuration for rule %v", rule.Name)
 	}
 
+	after := append(globalOpts.cfg.ExecuteAfter, rule.ExecuteAfter...)
+	if len(after) > 0 {
+		for _, cmd := range after {
+			cmds = append(cmds, exec.Command("sh", "-c", cmd))
+		}
+	}
+
 	if err != nil {
 		return err
 	}
 	for _, cmd := range cmds {
 		err = RunCommand(cmd)
 		if err != nil {
-			return err
+			fmt.Fprintf(os.Stderr, "executing command for rule %v failed: %v\n", rule.Name, err)
 		}
 	}
 

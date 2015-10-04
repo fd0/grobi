@@ -14,7 +14,9 @@ import (
 
 // Config holds all configuration for grobi.
 type Config struct {
-	Rules         []Rule
+	Rules []Rule
+
+	ExecuteAfter []string `yaml:"execute_after"`
 }
 
 // xdgConfigDir returns the config directory according to the xdg standard, see

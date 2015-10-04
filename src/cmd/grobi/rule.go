@@ -16,6 +16,8 @@ type Rule struct {
 	DisableOrder []string `yaml:"disable_order"`
 
 	Atomic bool `yaml:"atomic"`
+
+	ExecuteAfter []string `yaml:"execute_after"`
 }
 
 // Match returns true iff the rule matches for the given list of outputs.
