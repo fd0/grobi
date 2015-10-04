@@ -126,6 +126,19 @@ func parseOutputLine(line string) (Output, error) {
 		return Output{}, fmt.Errorf("unknown state %q", ws.Text())
 	}
 
+	// handle special case: output is disconnected, but still active
+	if output.Connected || !ws.Scan() {
+		return output, nil
+	}
+
+	arg := strings.Split(ws.Text(), "+")
+	if len(arg) != 3 {
+		return output, nil
+	}
+
+	mode := arg[0]
+	output.Modes = append(output.Modes, Mode{Name: mode, Active: true})
+
 	return output, nil
 }
 
@@ -242,8 +255,15 @@ func GetOutputs() (Outputs, error) {
 // all named outputs in a row, left to right, given the currently active
 // Outputs and a list of output names, optionally followed by "@" and the
 // desired mode, e.g. LVDS1@1377x768.
-func BuildCommandOutputRow(atomic bool, current Outputs, outputs []string) ([]*exec.Cmd, error) {
-	if len(outputs) < 1 {
+func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
+	var outputs []string
+
+	switch {
+	case rule.ConfigureSingle != "":
+		outputs = []string{rule.ConfigureSingle}
+	case len(rule.ConfigureRow) > 0:
+		outputs = rule.ConfigureRow
+	default:
 		return nil, errors.New("empty monitor row configuration")
 	}
 
@@ -280,22 +300,38 @@ func BuildCommandOutputRow(atomic bool, current Outputs, outputs []string) ([]*e
 		enableOutputArgs = append(enableOutputArgs, args)
 	}
 
-	disableOutputArgs := [][]string{}
-
+	disableOutputs := make(map[string]struct{})
 	for _, output := range current {
-		if !output.Connected {
+		if !output.Connected && len(output.Modes) == 0 {
 			continue
 		}
 
-		// disable connected by inactive outputs
+		// disable unneeded outputs that are still active
 		if _, ok := active[output.Name]; !ok {
-			args := []string{"--output", output.Name, "--off"}
-			disableOutputArgs = append(disableOutputArgs, args)
+			disableOutputs[output.Name] = struct{}{}
 		}
 	}
 
+	disableOutputArgs := [][]string{}
+
+	// honour disable_order if present
+	for _, name := range rule.DisableOrder {
+		if _, ok := disableOutputs[name]; ok {
+			args := []string{"--output", name, "--off"}
+			disableOutputArgs = append(disableOutputArgs, args)
+
+			delete(disableOutputs, name)
+		}
+	}
+
+	// collect remaining outputs to be disabled
+	for name := range disableOutputs {
+		args := []string{"--output", name, "--off"}
+		disableOutputArgs = append(disableOutputArgs, args)
+	}
+
 	// enable/disable all monitors in one call to xrandr
-	if atomic {
+	if rule.Atomic {
 		verbosePrintf("using one atomic call to xrandr\n")
 		args := []string{}
 		for _, disableArgs := range disableOutputArgs {

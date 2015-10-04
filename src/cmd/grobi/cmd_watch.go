@@ -1,6 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+
+	"github.com/proxypoke/i3ipc"
+)
 
 type CmdWatch struct{}
 
@@ -17,7 +22,30 @@ func init() {
 func (cmd CmdWatch) Execute(args []string) error {
 	globalOpts.ReadConfigfile()
 
-	fmt.Printf("watch\n")
+	ch, err := i3ipc.Subscribe(i3ipc.I3OutputEvent)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "unable to connect to i3: %v", err)
+		os.Exit(1)
+	}
+
+	verbosePrintf("successfully subscribed to the i3 IPC socket\n")
+	for range ch {
+		fmt.Printf("received output change event\n")
+
+		outputs, err := GetOutputs()
+		if err != nil {
+			return err
+		}
+
+		for _, rule := range globalOpts.cfg.Rules {
+			if rule.Match(outputs) {
+				verbosePrintf("found matching rule (name %v)\n", rule.Name)
+				return ApplyRule(outputs, rule)
+			}
+		}
+	}
+
+	fmt.Printf("done\n")
 
 	return nil
 }

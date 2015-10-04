@@ -180,6 +180,40 @@ VIRTUAL1 disconnected (normal left inverted right x axis y axis)`,
 			Output{Name: "VIRTUAL1"},
 		},
 	},
+	{
+		`Screen 0: minimum 320 x 200, current 3280 x 1200, maximum 8192 x 8192
+LVDS1 connected (normal left inverted right x axis y axis)
+   1366x768      60.10 +
+   1024x768      60.00  
+   800x600       60.32    56.25  
+   640x480       59.94  
+HDMI2 disconnected 1600x1200+0+0 (normal left inverted right x axis y axis) 0mm x 0mm
+HDMI3 disconnected 1680x1050+1600+0 (normal left inverted right x axis y axis) 0mm x 0mm`,
+		[]Output{
+			Output{
+				Name: "LVDS1",
+				Modes: []Mode{
+					{Name: "1366x768", Default: true},
+					{Name: "1024x768"},
+					{Name: "800x600"},
+					{Name: "640x480"},
+				},
+				Connected: true,
+			},
+			Output{
+				Name: "HDMI2",
+				Modes: []Mode{
+					{Name: "1600x1200", Active: true},
+				},
+			},
+			Output{
+				Name: "HDMI3",
+				Modes: []Mode{
+					{Name: "1680x1050", Active: true},
+				},
+			},
+		},
+	},
 }
 
 func TestRandrParse(t *testing.T) {
@@ -234,6 +268,13 @@ var TestOutputLines = []struct {
 		Output{
 			Name:      "VGA1",
 			Connected: false,
+		},
+	},
+	{
+		"HDMI3 disconnected 1680x1050+1600+0 (normal left inverted right x axis y axis) 0mm x 0mm`",
+		Output{
+			Name:  "HDMI3",
+			Modes: []Mode{{Name: "1680x1050", Active: true}},
 		},
 	},
 }
