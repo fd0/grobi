@@ -15,3 +15,5 @@ install:
 
 script:
   - go run build.go
+  - gofmt -l ./src
+  - test -z "$(gofmt -l ./src)"
