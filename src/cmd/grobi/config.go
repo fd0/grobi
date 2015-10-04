@@ -29,13 +29,15 @@ func xdgConfigDir() string {
 }
 
 // openConfigFile returns a reader for the config file.
-func openConfigFile() (io.ReadCloser, error) {
+func openConfigFile(name string) (io.ReadCloser, error) {
 	for _, filename := range []string{
+		name,
 		os.Getenv("GROBI_CONFIG"),
 		filepath.Join(xdgConfigDir(), "grobi.conf"),
 		filepath.Join(os.Getenv("HOME"), ".grobi.conf")} {
 		if filename != "" {
 			if f, err := os.Open(filename); err == nil {
+				verbosePrintf("reading config from %v\n", filename)
 				return f, nil
 			}
 		}
@@ -45,8 +47,8 @@ func openConfigFile() (io.ReadCloser, error) {
 }
 
 // readConfig returns a configuration struct read from a configuration file.
-func readConfig() (Config, error) {
-	rd, err := openConfigFile()
+func readConfig(name string) (Config, error) {
+	rd, err := openConfigFile(name)
 	if err != nil {
 		return Config{}, err
 	}

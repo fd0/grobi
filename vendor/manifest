@@ -8,6 +8,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/jessevdk/go-flags",
+			"repository": "https://github.com/jessevdk/go-flags",
+			"revision": "1acbbaff2f347c412a0c7884873bd72cc9c1f5b4",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/proxypoke/i3ipc",
 			"repository": "https://github.com/proxypoke/i3ipc",
 			"revision": "de8f6bb6b583a14ca2164f0e1a8f9bea2c7e120e",

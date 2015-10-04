@@ -4,38 +4,49 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/davecgh/go-spew/spew"
+	"github.com/jessevdk/go-flags"
 )
 
-func main() {
-	cfg, err := readConfig()
+// GlobalOptions contains all global options.
+type GlobalOptions struct {
+	Verbose bool   `short:"v" long:"verbose"     default:"false" description:"Be verbose"`
+	Config  string `short:"C" long:"config"                      description:"Read config from this file"`
+
+	cfg *Config
+}
+
+func (gopts *GlobalOptions) ReadConfigfile() {
+	if gopts.cfg != nil {
+		return
+	}
+
+	cfg, err := readConfig(gopts.Config)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "errror reading config file: %v", err)
+		fmt.Fprintf(os.Stderr, "error reading config file: %v\n", err)
 		os.Exit(1)
 	}
 
-	spew.Dump(cfg)
+	gopts.cfg = &cfg
+}
 
-	// ch, err := i3ipc.Subscribe(i3ipc.I3OutputEvent)
-	// if err != nil {
-	// 	fmt.Fprintf(os.Stderr, "unable to connect to i3: %v", err)
-	// 	os.Exit(1)
-	// }
+var globalOpts = GlobalOptions{}
+var parser = flags.NewParser(&globalOpts, flags.Default)
 
-	// for range ch {
-	// 	fmt.Printf("received output change event\n")
-	// 	cmd := exec.Command("sh", "-c", cfg.DefaultAction)
-	// 	cmd.Stderr = os.Stderr
-	// 	err = cmd.Run()
-	// 	if err != nil {
-	// 		fmt.Fprintf(os.Stderr, "error running command %q\n", cfg.DefaultAction)
-	// 	}
-	// }
-
-	outputs, err := GetOutputs()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error running xrandr: %v\n", err)
+func verbosePrintf(format string, args ...interface{}) {
+	if !globalOpts.Verbose {
+		return
 	}
 
-	spew.Dump(outputs)
+	fmt.Printf(format, args...)
+}
+
+func main() {
+	_, err := parser.Parse()
+	if e, ok := err.(*flags.Error); ok && e.Type == flags.ErrHelp {
+		os.Exit(0)
+	}
+
+	if err != nil {
+		os.Exit(1)
+	}
 }
