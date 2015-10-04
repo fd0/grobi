@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/proxypoke/i3ipc"
 )
@@ -18,6 +19,21 @@ func init() {
 	}
 }
 
+func MatchRules(rules []Rule, outputs Outputs) error {
+	for _, rule := range rules {
+		if rule.Match(outputs) {
+			verbosePrintf("found matching rule (name %v)\n", rule.Name)
+			if err := ApplyRule(outputs, rule); err != nil {
+				return err
+			}
+
+			return nil
+		}
+	}
+
+	return nil
+}
+
 func (cmd CmdWatch) Execute(args []string) error {
 	globalOpts.ReadConfigfile()
 
@@ -28,25 +44,32 @@ func (cmd CmdWatch) Execute(args []string) error {
 
 	verbosePrintf("successfully subscribed to the i3 IPC socket\n")
 
-nextEvent:
-	for range ch {
-		fmt.Printf("received output change event\n")
+	ticker := time.NewTicker(2 * time.Second)
 
-		outputs, err := GetOutputs()
+	var lastOutputs Outputs
+	for {
+		select {
+		case <-ch:
+			verbosePrintf("new output change event from i3 received\n")
+		case <-ticker.C:
+			verbosePrintf("regularly checking xrandr\n")
+		}
+
+		newOutputs, err := GetOutputs()
 		if err != nil {
 			return err
 		}
 
-		for _, rule := range globalOpts.cfg.Rules {
-			if rule.Match(outputs) {
-				verbosePrintf("found matching rule (name %v)\n", rule.Name)
-				if err = ApplyRule(outputs, rule); err != nil {
-					return err
-				}
-				continue nextEvent
-			}
+		if lastOutputs.Equals(newOutputs) {
+			verbosePrintf("nothing has changed, continuing\n")
+			continue
 		}
-	}
 
-	return nil
+		err = MatchRules(globalOpts.cfg.Rules, newOutputs)
+		if err != nil {
+			return err
+		}
+
+		lastOutputs = newOutputs
+	}
 }

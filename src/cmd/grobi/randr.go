@@ -31,6 +31,28 @@ func (o Output) String() string {
 	return str
 }
 
+// Equals checks whether the two Outputs are equal.
+func (o Output) Equals(other Output) bool {
+	if o.Name != other.Name || o.Connected != other.Connected {
+		return false
+	}
+
+	if len(o.Modes) != len(other.Modes) {
+		return false
+	}
+
+	for i := range o.Modes {
+		m1 := o.Modes[i]
+		m2 := other.Modes[i]
+
+		if m1 != m2 {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Outputs is a list of outputs.
 type Outputs []Output
 
@@ -63,6 +85,24 @@ func (os Outputs) Connected(name string) bool {
 		}
 	}
 	return false
+}
+
+// Equals checks whether the two Outputs are equal.
+func (os Outputs) Equals(other Outputs) bool {
+	if len(os) != len(other) {
+		return false
+	}
+
+	for i := range os {
+		out1 := os[i]
+		out2 := other[i]
+
+		if !out1.Equals(out2) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Mode is an output mode that may be active or default.
