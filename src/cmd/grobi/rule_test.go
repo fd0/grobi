@@ -3,26 +3,26 @@ package main
 import "testing"
 
 var testRules = []struct {
-	rule Rule
+	rule  Rule
 	match bool
 }{
 	{
 		Rule{
 			OutputsConnected: []string{"HDMI", "VGA"},
-			OutputsAbsent: []string{"DP2-2"},
+			OutputsAbsent:    []string{"DP2-2"},
 		},
 		true,
 	},
 	{
 		Rule{
 			OutputsConnected: []string{"LVDS1"},
-			OutputsAbsent: []string{"HDMI"},
+			OutputsAbsent:    []string{"HDMI"},
 		},
 		false,
 	},
 	{
 		Rule{
-			OutputsConnected: []string{"LVDS1"},
+			OutputsConnected:    []string{"LVDS1"},
 			OutputsDisconnected: []string{"HDMI"},
 		},
 		false,
@@ -41,7 +41,7 @@ var testRules = []struct {
 	},
 	{
 		Rule{
-			OutputsConnected: []string{"HDMI*", "VGA"},
+			OutputsConnected:    []string{"HDMI*", "VGA"},
 			OutputsDisconnected: []string{"DP2-?"},
 		},
 		true,
@@ -49,7 +49,7 @@ var testRules = []struct {
 	{
 		Rule{
 			OutputsConnected: []string{"HDMI*", "VGA"},
-			OutputsAbsent: []string{"DP2-?"},
+			OutputsAbsent:    []string{"DP2-?"},
 		},
 		false,
 	},
@@ -57,27 +57,27 @@ var testRules = []struct {
 
 var testOutputs = []Output{
 	{
-		Name: "LVDS",
+		Name:      "LVDS",
 		Connected: true,
 		Modes: []Mode{
-			{ "1377x768", true, true},
-			{ "1024x768", false, false},
+			{"1377x768", true, true},
+			{"1024x768", false, false},
 		},
 	},
 	{
-		Name: "VGA",
+		Name:      "VGA",
 		Connected: true,
 		Modes: []Mode{
-			{ "1280x1024", true, false},
-			{ "1024x768", false, true},
+			{"1280x1024", true, false},
+			{"1024x768", false, true},
 		},
 	},
 	{
-		Name: "HDMI",
+		Name:      "HDMI",
 		Connected: true,
 		Modes: []Mode{
-			{ "1920x1080", true, true},
-			{ "1024x768", false, false},
+			{"1920x1080", true, true},
+			{"1024x768", false, false},
 		},
 	},
 	{
