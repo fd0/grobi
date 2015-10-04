@@ -228,7 +228,7 @@ nextLine:
 
 // GetOutputs runs `xrandr` and returns the parsed output.
 func GetOutputs() (Outputs, error) {
-	cmd := exec.Command("xrandr", "--query")
+	cmd := exec.Command("xrandr", "--current", "--query")
 	cmd.Stderr = os.Stderr
 	output, err := cmd.Output()
 	if err != nil {
