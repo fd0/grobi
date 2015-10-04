@@ -2,9 +2,11 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
@@ -65,6 +67,25 @@ func readConfig() (Config, error) {
 		return Config{}, err
 	}
 
+	if err = cfg.Valid(); err != nil {
+		return Config{}, err
+	}
+
 	return cfg, nil
 }
 
+// Valid returns an error if the config is invalid, ie a pattern is malformed.
+func (cfg Config) Valid() error {
+
+	for _, rule := range cfg.Rules {
+		for _, list := range [][]string{rule.OutputsPresent, rule.OutputsAbsent, rule.OutputsConnected, rule.OutputsDisconnected} {
+			for _, pat := range list {
+				if _, err := path.Match(pat, ""); err != nil {
+					return fmt.Errorf("pattern %q malformed: %v", pat, err)
+				}
+			}
+		}
+	}
+
+	return nil
+}

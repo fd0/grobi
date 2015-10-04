@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 )
 
@@ -36,7 +37,12 @@ type Outputs []Output
 // Present returns true iff the list of outputs contains the named output.
 func (os Outputs) Present(name string) bool {
 	for _, o := range os {
-		if o.Name == name {
+		m, err := path.Match(name, o.Name)
+		if err != nil {
+			return false
+		}
+
+		if m {
 			return true
 		}
 	}
@@ -47,8 +53,13 @@ func (os Outputs) Present(name string) bool {
 // it is connected.
 func (os Outputs) Connected(name string) bool {
 	for _, o := range os {
-		if o.Name == name {
-			return o.Connected
+		m, err := path.Match(name, o.Name)
+		if err != nil {
+			return false
+		}
+
+		if m && o.Connected {
+			return true
 		}
 	}
 	return false
