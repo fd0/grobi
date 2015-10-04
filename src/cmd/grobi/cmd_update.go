@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 type CmdUpdate struct{}
 
 func init() {
@@ -17,7 +15,18 @@ func init() {
 func (cmd CmdUpdate) Execute(args []string) error {
 	globalOpts.ReadConfigfile()
 
-	fmt.Printf("update\n")
+	outputs, err := GetOutputs()
+	if err != nil {
+		return err
+	}
 
+	for _, rule := range globalOpts.cfg.Rules {
+		if rule.Match(outputs) {
+			verbosePrintf("found matching rule (name %v)\n", rule.Name)
+			return ApplyRule(outputs, rule)
+		}
+	}
+
+	verbosePrintf("no rules match the current configuration\n")
 	return nil
 }

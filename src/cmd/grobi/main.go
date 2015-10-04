@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -11,6 +13,7 @@ import (
 type GlobalOptions struct {
 	Verbose bool   `short:"v" long:"verbose"     default:"false" description:"Be verbose"`
 	Config  string `short:"C" long:"config"                      description:"Read config from this file"`
+	DryRun  bool   `short:"n" long:"dry-run"                     description:"Only print what commands would be executed without actually runnig them"`
 
 	cfg *Config
 }
@@ -27,6 +30,23 @@ func (gopts *GlobalOptions) ReadConfigfile() {
 	}
 
 	gopts.cfg = &cfg
+}
+
+// RunCommand runs the given command or prints the arguments to stdout if
+// globalOpts.DryRun is true.
+func RunCommand(cmd *exec.Cmd) error {
+	if globalOpts.DryRun {
+		s := fmt.Sprintf("%s", cmd.Args)
+		fmt.Printf("%s\n", s[1:len(s)-1])
+		return nil
+	}
+
+	verbosePrintf("running command %v %v\n", cmd.Path, strings.Join(cmd.Args, " "))
+	cmd.Stderr = os.Stderr
+	if globalOpts.Verbose {
+		cmd.Stdout = os.Stdout
+	}
+	return cmd.Run()
 }
 
 var globalOpts = GlobalOptions{}

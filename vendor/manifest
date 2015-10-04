@@ -2,12 +2,6 @@
 	"version": 0,
 	"dependencies": [
 		{
-			"importpath": "github.com/davecgh/go-spew",
-			"repository": "https://github.com/davecgh/go-spew",
-			"revision": "2df174808ee097f90d259e432cc04442cf60be21",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/jessevdk/go-flags",
 			"repository": "https://github.com/jessevdk/go-flags",
 			"revision": "1acbbaff2f347c412a0c7884873bd72cc9c1f5b4",

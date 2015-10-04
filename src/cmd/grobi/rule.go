@@ -8,6 +8,12 @@ type Rule struct {
 	OutputsDisconnected []string `yaml:"outputs_disconnected"`
 	OutputsPresent      []string `yaml:"outputs_present"`
 	OutputsAbsent       []string `yaml:"outputs_absent"`
+
+	ConfigureRow     []string `yaml:"configure_row"`
+	ConfigureSingle  string   `yaml:"configure_single"`
+	ConfigureCommand string   `yaml:"configure_command"`
+
+	Atomic bool `yaml:"atomic"`
 }
 
 // Match returns true iff the rule matches for the given list of outputs.

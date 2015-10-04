@@ -237,3 +237,102 @@ func GetOutputs() (Outputs, error) {
 
 	return RandrParse(bytes.NewReader(output))
 }
+
+// BuildCommandOutputRow return a sequence of calls to `xrandr` to configure
+// all named outputs in a row, left to right, given the currently active
+// Outputs and a list of output names, optionally followed by "@" and the
+// desired mode, e.g. LVDS1@1377x768.
+func BuildCommandOutputRow(atomic bool, current Outputs, outputs []string) ([]*exec.Cmd, error) {
+	if len(outputs) < 1 {
+		return nil, errors.New("empty monitor row configuration")
+	}
+
+	verbosePrintf("enable outputs: %v\n", outputs)
+
+	command := "xrandr"
+	enableOutputArgs := [][]string{}
+
+	active := make(map[string]struct{})
+	var lastOutput = ""
+	for i, output := range outputs {
+		data := strings.SplitN(output, "@", 2)
+		name := data[0]
+		mode := ""
+		if len(data) > 1 {
+			mode = data[1]
+		}
+
+		active[name] = struct{}{}
+
+		args := []string{}
+		args = append(args, "--output", name)
+		if mode == "" {
+			args = append(args, "--auto")
+		} else {
+			args = append(args, "--mode", mode)
+		}
+
+		if i > 0 {
+			args = append(args, "--right-of", lastOutput)
+		}
+
+		lastOutput = name
+		enableOutputArgs = append(enableOutputArgs, args)
+	}
+
+	disableOutputArgs := [][]string{}
+
+	for _, output := range current {
+		if !output.Connected {
+			continue
+		}
+
+		// disable connected by inactive outputs
+		if _, ok := active[output.Name]; !ok {
+			args := []string{"--output", output.Name, "--off"}
+			disableOutputArgs = append(disableOutputArgs, args)
+		}
+	}
+
+	// enable/disable all monitors in one call to xrandr
+	if atomic {
+		verbosePrintf("using one atomic call to xrandr\n")
+		args := []string{}
+		for _, disableArgs := range disableOutputArgs {
+			args = append(args, disableArgs...)
+		}
+		for _, enableArgs := range enableOutputArgs {
+			args = append(args, enableArgs...)
+		}
+		cmd := exec.Command(command, args...)
+		return []*exec.Cmd{cmd}, nil
+	}
+
+	verbosePrintf("splitting the configuration into several calls to xrandr\n")
+
+	// otherwise return several calls to xrandr
+	cmds := []*exec.Cmd{}
+
+	// disable an output
+	if len(disableOutputArgs) > 0 {
+		cmds = append(cmds, exec.Command(command, disableOutputArgs[0]...))
+		disableOutputArgs = disableOutputArgs[1:]
+	}
+
+	// now for each newly enabled output, also disable another output
+	for len(disableOutputArgs) > 0 || len(enableOutputArgs) > 0 {
+		args := []string{}
+		if len(disableOutputArgs) > 0 {
+			args = append(args, disableOutputArgs[0]...)
+			disableOutputArgs = disableOutputArgs[1:]
+		}
+		if len(enableOutputArgs) > 0 {
+			args = append(args, enableOutputArgs[0]...)
+			enableOutputArgs = enableOutputArgs[1:]
+		}
+
+		cmds = append(cmds, exec.Command(command, args...))
+	}
+
+	return cmds, nil
+}

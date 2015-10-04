@@ -14,7 +14,6 @@ import (
 
 // Config holds all configuration for grobi.
 type Config struct {
-	DefaultAction string `yaml:"default_action"`
 	Rules         []Rule
 }
 
