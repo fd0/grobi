@@ -64,7 +64,7 @@ func (cmd CmdApply) Execute(args []string) error {
 		return errors.New("need exactly one rule name as the parameter")
 	}
 
-	outputs, err := GetOutputs()
+	outputs, err := DetectOutputs()
 	if err != nil {
 		return err
 	}

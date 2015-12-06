@@ -36,11 +36,21 @@ func (cmd CmdWatch) Execute(args []string) error {
 
 	var backoffCh <-chan time.Time
 	var disablePoll bool
+	var eventReceived bool
 
 	var lastOutputs Outputs
 	for {
 		if !disablePoll {
-			newOutputs, err := GetOutputs()
+			var newOutputs Outputs
+			var err error
+
+			if eventReceived {
+				newOutputs, err = DetectOutputs()
+				eventReceived = false
+			} else {
+				newOutputs, err = GetOutputs()
+			}
+
 			if err != nil {
 				return err
 			}
@@ -64,6 +74,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 		select {
 		case <-ch:
 			verbosePrintf("new output change event from i3 received\n")
+			eventReceived = true
 		case <-tickerCh:
 			verbosePrintf("regularly checking xrandr\n")
 		case <-backoffCh:

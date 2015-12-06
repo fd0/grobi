@@ -30,7 +30,7 @@ func MatchRules(rules []Rule, outputs Outputs) error {
 func (cmd CmdUpdate) Execute(args []string) error {
 	globalOpts.ReadConfigfile()
 
-	outputs, err := GetOutputs()
+	outputs, err := DetectOutputs()
 	if err != nil {
 		return err
 	}

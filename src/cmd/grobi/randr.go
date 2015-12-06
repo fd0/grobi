@@ -279,10 +279,28 @@ nextLine:
 	return outputs, nil
 }
 
+func runXrandr(extraArgs ...string) *exec.Cmd {
+	args := []string{"--query"}
+	args = append(args, extraArgs...)
+	cmd := exec.Command("xrandr", args...)
+	cmd.Stderr = os.Stderr
+	return cmd
+}
+
 // GetOutputs runs `xrandr` and returns the parsed output.
 func GetOutputs() (Outputs, error) {
-	cmd := exec.Command("xrandr", "--current", "--query")
-	cmd.Stderr = os.Stderr
+	cmd := runXrandr("--current")
+	output, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	return RandrParse(bytes.NewReader(output))
+}
+
+// DetectOutputs runs `xrandr`, rescans the outputs and returns the parsed outputs.
+func DetectOutputs() (Outputs, error) {
+	cmd := runXrandr()
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, err
