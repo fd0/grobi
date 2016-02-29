@@ -6,7 +6,7 @@ Watch for changes in outputs for the i3 window manager and react accordingly
 
 # Installation
 
-Grobi requires Go version 1.4 or newer. To build grobi, run the following command:
+Grobi requires Go version 1.3 or newer. To build grobi, run the following command:
 
 ```shell
 $ go run build.go
