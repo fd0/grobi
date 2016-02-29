@@ -6,7 +6,8 @@ Watch for changes in outputs for the i3 window manager and react accordingly
 
 # Installation
 
-Grobi requires Go version 1.3 or newer. To build grobi, run the following command:
+Grobi requires Go version 1.3 or newer to compile. To build grobi, run the
+following command:
 
 ```shell
 $ go run build.go
@@ -37,7 +38,8 @@ Available commands:
 
 # Development
 
-Grobi is developed using the build tool [gb](https://getgb.io). It can be installed by running the following command:
+Grobi is developed using the build tool [gb](https://getgb.io). It needs at
+least Go 1.4 and can be installed by running the following command:
 
 ```shell
 $ go get github.com/constabulary/gb/...
