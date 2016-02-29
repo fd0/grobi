@@ -1,10 +1,12 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"time"
 
-	"github.com/proxypoke/i3ipc"
+	"github.com/BurntSushi/xgb"
+	"github.com/BurntSushi/xgb/randr"
+	"github.com/BurntSushi/xgb/xproto"
 )
 
 type CmdWatch struct{}
@@ -19,15 +21,64 @@ func init() {
 	}
 }
 
+type Event struct {
+	Event xgb.Event
+	Error error
+}
+
+const eventSendTimeout = 500 * time.Millisecond
+
+func subscribeXEvents(ch chan<- Event, done <-chan struct{}) {
+	X, err := xgb.NewConn()
+	if err != nil {
+		ch <- Event{Error: err}
+		return
+	}
+
+	defer X.Close()
+	if err = randr.Init(X); err != nil {
+		ch <- Event{Error: err}
+		return
+	}
+
+	root := xproto.Setup(X).DefaultScreen(X).Root
+
+	eventMask := randr.NotifyMaskScreenChange |
+		randr.NotifyMaskCrtcChange |
+		randr.NotifyMaskOutputChange |
+		randr.NotifyMaskOutputProperty
+
+	err = randr.SelectInputChecked(X, root, uint16(eventMask)).Check()
+	if err != nil {
+		ch <- Event{Error: err}
+		return
+	}
+
+	for {
+		ev, err := X.WaitForEvent()
+		select {
+		case ch <- Event{Event: ev, Error: err}:
+		case <-time.After(eventSendTimeout):
+			continue
+		case <-done:
+			return
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
 func (cmd CmdWatch) Execute(args []string) error {
 	globalOpts.ReadConfigfile()
 
-	ch, err := i3ipc.Subscribe(i3ipc.I3OutputEvent)
-	if err != nil {
-		return fmt.Errorf("unable to connect to i3: %v", err)
-	}
+	done := make(chan struct{})
+	defer close(done)
 
-	verbosePrintf("successfully subscribed to the i3 IPC socket\n")
+	ch := make(chan Event)
+	go subscribeXEvents(ch, done)
+
+	verbosePrintf("successfully subscribed to X RANDR change events\n")
 
 	var tickerCh <-chan time.Time
 	if globalOpts.PollInterval > 0 {
@@ -72,8 +123,13 @@ func (cmd CmdWatch) Execute(args []string) error {
 		}
 
 		select {
-		case <-ch:
-			verbosePrintf("new output change event from i3 received\n")
+		case ev := <-ch:
+			verbosePrintf("new RANDR change event received:\n")
+			verbosePrintf("  %v\n", ev)
+			if ev.Error != nil {
+				return ev.Error
+			}
+
 			eventReceived = true
 		case <-tickerCh:
 			verbosePrintf("regularly checking xrandr\n")
