@@ -8,12 +8,6 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/proxypoke/i3ipc",
-			"repository": "https://github.com/proxypoke/i3ipc",
-			"revision": "de8f6bb6b583a14ca2164f0e1a8f9bea2c7e120e",
-			"branch": "master"
-		},
-		{
 			"importpath": "gopkg.in/yaml.v2",
 			"repository": "https://gopkg.in/yaml.v2",
 			"revision": "53feefa2559fb8dfa8d81baad31be332c97d6c77",
