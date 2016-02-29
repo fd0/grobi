@@ -3,17 +3,22 @@ sudo: false
 
 go:
   - 1.4.3
-  - 1.5.1
+  - 1.5.3
+  - 1.5.6
 
 install:
   - go version
   - export GOBIN="$GOPATH/bin"
   - export PATH="$PATH:$GOBIN"
   - go get github.com/constabulary/gb/...
+  - go get -u github.com/golang/lint/golint
+  - go get golang.org/x/tools/cmd/goimports
   - gb info
-  - gb vendor restore
 
 script:
   - go run build.go
-  - gofmt -l ./src
-  - test -z "$(gofmt -l ./src)"
+  - gb build
+  - gb test
+  - go run build.go
+  - diff <(GOPATH="$PWD:$PWD/vendor" goimports -d ./src) <(printf "")
+  - diff <(golint ./src/...) <(printf "")
