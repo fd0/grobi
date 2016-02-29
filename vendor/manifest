@@ -2,6 +2,12 @@
 	"version": 0,
 	"dependencies": [
 		{
+			"importpath": "github.com/BurntSushi/xgb",
+			"repository": "https://github.com/BurntSushi/xgb",
+			"revision": "d3d84afd14161dc1c07449d8f9feb2dca6ccc10b",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/jessevdk/go-flags",
 			"repository": "https://github.com/jessevdk/go-flags",
 			"revision": "1acbbaff2f347c412a0c7884873bd72cc9c1f5b4",
