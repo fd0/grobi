@@ -4,7 +4,7 @@ sudo: false
 go:
   - 1.4.3
   - 1.5.3
-  - 1.5.6
+  - 1.6
 
 install:
   - go version
