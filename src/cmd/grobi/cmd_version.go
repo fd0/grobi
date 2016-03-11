@@ -21,7 +21,7 @@ func init() {
 }
 
 func (cmd CmdVersion) Execute(args []string) error {
-	fmt.Printf("restic %s\ncompiled at %s with %v\n",
+	fmt.Printf("grobi %s\ncompiled at %s with %v\n",
 		version, compiledAt, runtime.Version())
 
 	return nil
