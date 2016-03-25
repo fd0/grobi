@@ -132,7 +132,6 @@ func (cmd CmdWatch) Execute(args []string) error {
 
 			eventReceived = true
 		case <-tickerCh:
-			V("regularly checking xrandr\n")
 		case <-backoffCh:
 			V("reenable polling\n")
 			backoffCh = nil
