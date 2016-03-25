@@ -24,9 +24,12 @@ Usage:
 Application Options:
   -v, --verbose   Be verbose (false)
   -C, --config=   Read config from this file
-  -n, --dry-run   Only print what commands would be executed without actually runnig them
-  -i, --interval= Number of seconds between polls, set to zero to disable polling (5)
+  -n, --dry-run   Only print what commands would be executed without actually
+                  runnig them
+  -i, --interval= Number of seconds between polls, set to zero to disable
+                  polling (5)
   -p, --pause=    Number of seconds to pause after a change was executed (2)
+  -l, --logfile=  Write log to file
 
 Help Options:
   -h, --help      Show this help message
@@ -36,6 +39,7 @@ Available commands:
   update   update outputs
   version  display version
   watch    watch for changes
+
 ```
 
 # Development
