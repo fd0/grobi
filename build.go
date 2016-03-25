@@ -96,6 +96,15 @@ func updateGopath(dst, src, prefix string) error {
 	})
 }
 
+func directoryExists(dirname string) bool {
+	stat, err := os.Stat(dirname)
+	if err != nil && os.IsNotExist(err) {
+		return false
+	}
+
+	return stat.IsDir()
+}
+
 // copyFile creates dst from src, preserving file attributes and timestamps.
 func copyFile(dst, src string) error {
 	fi, err := os.Stat(src)
@@ -260,7 +269,8 @@ type Constants map[string]string
 func (cs Constants) LDFlags() string {
 	l := make([]string, 0, len(cs))
 
-	if strings.HasPrefix(runtime.Version(), "go1.5") {
+	v := runtime.Version()
+	if strings.HasPrefix(v, "go1.5") || strings.HasPrefix(v, "go1.6") {
 		for k, v := range cs {
 			l = append(l, fmt.Sprintf(`-X "%s=%s"`, k, v))
 		}
@@ -330,8 +340,10 @@ func main() {
 	}
 
 	vendor := filepath.Join(root, "vendor", "src")
-	if err = updateGopath(gopath, vendor, ""); err != nil {
-		die("copying files from %v to %v failed: %v\n", root, gopath, err)
+	if directoryExists(vendor) {
+		if err = updateGopath(gopath, vendor, ""); err != nil {
+			die("copying files from %v to %v failed: %v\n", root, gopath, err)
+		}
 	}
 
 	defer func() {
