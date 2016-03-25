@@ -22,10 +22,16 @@ type Output struct {
 
 func (o Output) String() string {
 	var con string
-	if o.Connected {
+	switch {
+	case o.Connected && o.Primary:
+		con = " (connected, primary)"
+	case o.Connected:
 		con = " (connected)"
+	case o.Primary:
+		con = " (primary)"
 	}
 	str := fmt.Sprintf("%s%s", o.Name, con)
+
 	if len(o.Modes) > 0 {
 		str += fmt.Sprintf(" %v", o.Modes)
 	}
@@ -167,11 +173,20 @@ func parseOutputLine(line string) (Output, error) {
 		return Output{}, fmt.Errorf("unknown state %q", ws.Text())
 	}
 
-	// handle special case: output is disconnected, but still active
-	if output.Connected || !ws.Scan() {
+	if !ws.Scan() {
 		return output, nil
 	}
 
+	if ws.Text() == "primary" {
+		output.Primary = true
+		ws.Scan()
+	}
+
+	if output.Connected {
+		return output, nil
+	}
+
+	// handle special case when output is disconnected but still active
 	arg := strings.Split(ws.Text(), "+")
 	if len(arg) != 3 {
 		return output, nil

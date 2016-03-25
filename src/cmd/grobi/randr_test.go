@@ -296,7 +296,7 @@ VIRTUAL1 disconnected (normal left inverted right x axis y axis)`,
 }
 
 func TestRandrParse(t *testing.T) {
-	for _, test := range randrTestOutputs {
+	for ti, test := range randrTestOutputs {
 		out, err := RandrParse(bytes.NewReader([]byte(test.str)))
 		if err != nil {
 			t.Errorf("unable to parse test string: %v", err)
@@ -314,22 +314,25 @@ func TestRandrParse(t *testing.T) {
 			out2 := out[i]
 
 			if out1.Name != out2.Name {
-				t.Errorf("output %d: name not equal: want %q, got %q", i,
-					out1.Name, out2.Name)
+				t.Errorf("test %d, output %d: name not equal: want %q, got %q",
+					ti, i, out1.Name, out2.Name)
 			}
 
 			if out1.Connected != out2.Connected {
-				t.Errorf("output %d: connected not equal: want %v, got %v", i,
+				t.Errorf("test %d, output %d: connected not equal: want %v, got %v",
+					ti, i,
 					out1.Connected, out2.Connected)
 			}
 
 			if out1.Primary != out2.Primary {
-				t.Errorf("output %d: primary not equal: want %v, got %v", i,
+				t.Errorf("test %d, output %d: primary not equal: want %v, got %v",
+					ti, i,
 					out1.Primary, out2.Primary)
 			}
 
 			if !reflect.DeepEqual(out1.Modes, out2.Modes) {
-				t.Errorf("output %d: list of modes not equal: want %v, got %v", i,
+				t.Errorf("test %d, output %d: list of modes not equal:\n  want %v\n  got  %v",
+					ti, i,
 					out1.Modes, out2.Modes)
 			}
 		}
@@ -364,9 +367,9 @@ var TestOutputLines = []struct {
 	{
 		"DP3-1-8 connected primary 2560x1440+0+0 (normal left inverted right x axis y axis) 553mm x 311mm",
 		Output{
-			Name:    "DP3-1-8",
-			Modes:   []Mode{{Name: "2560x1440", Active: true}},
-			Primary: true,
+			Name:      "DP3-1-8",
+			Connected: true,
+			Primary:   true,
 		},
 	},
 }
@@ -380,7 +383,8 @@ func TestParseOutputLine(t *testing.T) {
 		}
 
 		if !reflect.DeepEqual(out, test.output) {
-			t.Errorf("test %d failed: expected Output not found", i)
+			t.Errorf("test %d failed: expected Output not found, want %v, got %v",
+				i, test.output, out)
 			continue
 		}
 	}
