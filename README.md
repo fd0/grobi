@@ -2,7 +2,9 @@
 
 # grobi
 
-Watch for changes in outputs for the i3 window manager and react accordingly
+This program watches for changes in the available outputs (e.g. when a monitor
+is connected/disconnected) and will automatically configure the currently used
+outputs via RANDR according to configurable profiles.
 
 # Installation
 
