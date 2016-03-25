@@ -42,6 +42,12 @@ Available commands:
 
 ```
 
+# Configuration
+
+Have a look at the sample configuration file provided at
+[`doc/grobi.conf`](doc/grobi.conf). If you have any questions, please open an
+issue on GitHub.
+
 # Development
 
 Grobi is developed using the build tool [gb](https://getgb.io). It needs at
