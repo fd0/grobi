@@ -17,6 +17,7 @@ type Output struct {
 	Name      string
 	Modes     Modes
 	Connected bool
+	Primary   bool
 }
 
 func (o Output) String() string {

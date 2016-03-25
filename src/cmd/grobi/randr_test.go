@@ -173,6 +173,7 @@ VIRTUAL1 disconnected (normal left inverted right x axis y axis)`,
 					{Name: "720x400"},
 				},
 				Connected: true,
+				Primary:   true,
 			},
 			Output{Name: "DP2-3"},
 			Output{Name: "HDMI1"},
@@ -184,9 +185,9 @@ VIRTUAL1 disconnected (normal left inverted right x axis y axis)`,
 		`Screen 0: minimum 320 x 200, current 3280 x 1200, maximum 8192 x 8192
 LVDS1 connected (normal left inverted right x axis y axis)
    1366x768      60.10 +
-   1024x768      60.00  
-   800x600       60.32    56.25  
-   640x480       59.94  
+   1024x768      60.00
+   800x600       60.32    56.25
+   640x480       59.94
 HDMI2 disconnected 1600x1200+0+0 (normal left inverted right x axis y axis) 0mm x 0mm
 HDMI3 disconnected 1680x1050+1600+0 (normal left inverted right x axis y axis) 0mm x 0mm`,
 		[]Output{
@@ -211,6 +212,84 @@ HDMI3 disconnected 1680x1050+1600+0 (normal left inverted right x axis y axis) 0
 				Modes: []Mode{
 					{Name: "1680x1050", Active: true},
 				},
+			},
+		},
+	},
+	{
+		`Screen 0: minimum 8 x 8, current 1920 x 1080, maximum 32767 x 32767
+eDP1 connected primary 1920x1080+0+0 (normal left inverted right x axis y axis) 308mm x 173mm
+   1920x1080     60.01*+
+   1400x1050     59.98
+   1600x900      60.00
+   1280x1024     60.02
+   1280x960      60.00
+   1368x768      60.00
+   1280x720      60.00
+   1024x768      60.00
+   1024x576      60.00
+   960x540       60.00
+   800x600       60.32    56.25
+   864x486       60.00
+   640x480       59.94
+   720x405       60.00
+   640x360       60.00
+DP1 disconnected (normal left inverted right x axis y axis)
+DP2 disconnected (normal left inverted right x axis y axis)
+DP3 disconnected (normal left inverted right x axis y axis)
+HDMI1 disconnected (normal left inverted right x axis y axis)
+HDMI2 disconnected (normal left inverted right x axis y axis)
+HDMI3 disconnected (normal left inverted right x axis y axis)
+VIRTUAL1 disconnected (normal left inverted right x axis y axis)`,
+		[]Output{
+			Output{
+				Name: "eDP1",
+				Modes: []Mode{
+					{Name: "1920x1080", Default: true, Active: true},
+					{Name: "1400x1050"},
+					{Name: "1600x900"},
+					{Name: "1280x1024"},
+					{Name: "1280x960"},
+					{Name: "1368x768"},
+					{Name: "1280x720"},
+					{Name: "1024x768"},
+					{Name: "1024x576"},
+					{Name: "960x540"},
+					{Name: "800x600"},
+					{Name: "864x486"},
+					{Name: "640x480"},
+					{Name: "720x405"},
+					{Name: "640x360"},
+				},
+				Connected: true,
+				Primary:   true,
+			},
+			Output{
+				Name:      "DP1",
+				Connected: false,
+			},
+			Output{
+				Name:      "DP2",
+				Connected: false,
+			},
+			Output{
+				Name:      "DP3",
+				Connected: false,
+			},
+			Output{
+				Name:      "HDMI1",
+				Connected: false,
+			},
+			Output{
+				Name:      "HDMI2",
+				Connected: false,
+			},
+			Output{
+				Name:      "HDMI3",
+				Connected: false,
+			},
+			Output{
+				Name:      "VIRTUAL1",
+				Connected: false,
 			},
 		},
 	},
@@ -244,6 +323,11 @@ func TestRandrParse(t *testing.T) {
 					out1.Connected, out2.Connected)
 			}
 
+			if out1.Primary != out2.Primary {
+				t.Errorf("output %d: primary not equal: want %v, got %v", i,
+					out1.Primary, out2.Primary)
+			}
+
 			if !reflect.DeepEqual(out1.Modes, out2.Modes) {
 				t.Errorf("output %d: list of modes not equal: want %v, got %v", i,
 					out1.Modes, out2.Modes)
@@ -275,6 +359,14 @@ var TestOutputLines = []struct {
 		Output{
 			Name:  "HDMI3",
 			Modes: []Mode{{Name: "1680x1050", Active: true}},
+		},
+	},
+	{
+		"DP3-1-8 connected primary 2560x1440+0+0 (normal left inverted right x axis y axis) 553mm x 311mm",
+		Output{
+			Name:    "DP3-1-8",
+			Modes:   []Mode{{Name: "2560x1440", Active: true}},
+			Primary: true,
 		},
 	},
 }
