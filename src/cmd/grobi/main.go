@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -16,8 +17,11 @@ type GlobalOptions struct {
 	DryRun       bool   `short:"n" long:"dry-run"                     description:"Only print what commands would be executed without actually runnig them"`
 	PollInterval uint   `short:"i" long:"interval"    default:"5"     description:"Number of seconds between polls, set to zero to disable polling"`
 	Pause        uint   `short:"p" long:"pause"       default:"2"     description:"Number of seconds to pause after a change was executed"`
+	Logfile      string `short:"l" long:"logfile"                     description:"Write log to file"`
 
-	cfg *Config
+	cfg     *Config
+	log     *log.Logger
+	logfile *log.Logger
 }
 
 func (gopts *GlobalOptions) ReadConfigfile() {
@@ -43,7 +47,7 @@ func RunCommand(cmd *exec.Cmd) error {
 		return nil
 	}
 
-	verbosePrintf("running command %v %v\n", cmd.Path, strings.Join(cmd.Args, " "))
+	V("running command %v %v\n", cmd.Path, strings.Join(cmd.Args, " "))
 	cmd.Stderr = os.Stderr
 	if globalOpts.Verbose {
 		cmd.Stdout = os.Stdout
@@ -54,12 +58,27 @@ func RunCommand(cmd *exec.Cmd) error {
 var globalOpts = GlobalOptions{}
 var parser = flags.NewParser(&globalOpts, flags.Default)
 
-func verbosePrintf(format string, args ...interface{}) {
-	if !globalOpts.Verbose {
-		return
+func V(s string, data ...interface{}) {
+	if globalOpts.Verbose && globalOpts.log == nil {
+		globalOpts.log = log.New(os.Stdout, "grobi: ", log.Lmicroseconds|log.Ltime)
 	}
 
-	fmt.Printf(format, args...)
+	if globalOpts.log != nil {
+		globalOpts.log.Printf(s, data...)
+	}
+
+	if globalOpts.Logfile != "" && globalOpts.logfile == nil {
+		f, err := os.OpenFile(globalOpts.Logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "unable to open logfile: %v\n", err)
+			os.Exit(23)
+		}
+		globalOpts.logfile = log.New(f, "", log.Lmicroseconds|log.Ltime)
+	}
+
+	if globalOpts.logfile != nil {
+		globalOpts.logfile.Printf(s, data...)
+	}
 }
 
 func main() {

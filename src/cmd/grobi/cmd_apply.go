@@ -72,7 +72,7 @@ func (cmd CmdApply) Execute(args []string) error {
 	ruleName := strings.ToLower(args[0])
 	for _, rule := range globalOpts.cfg.Rules {
 		if strings.ToLower(rule.Name) == ruleName {
-			verbosePrintf("found matching rule (name %v)\n", rule.Name)
+			V("found matching rule (name %v)\n", rule.Name)
 			return ApplyRule(outputs, rule)
 		}
 	}

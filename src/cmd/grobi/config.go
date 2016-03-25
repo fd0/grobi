@@ -38,7 +38,7 @@ func openConfigFile(name string) (io.ReadCloser, error) {
 		filepath.Join(os.Getenv("HOME"), ".grobi.conf")} {
 		if filename != "" {
 			if f, err := os.Open(filename); err == nil {
-				verbosePrintf("reading config from %v\n", filename)
+				V("reading config from %v\n", filename)
 				return f, nil
 			}
 		}

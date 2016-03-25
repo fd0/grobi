@@ -341,7 +341,7 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		return nil, errors.New("empty monitor row configuration")
 	}
 
-	verbosePrintf("enable outputs: %v\n", outputs)
+	V("enable outputs: %v\n", outputs)
 
 	command := "xrandr"
 	enableOutputArgs := [][]string{}
@@ -406,7 +406,7 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 
 	// enable/disable all monitors in one call to xrandr
 	if rule.Atomic {
-		verbosePrintf("using one atomic call to xrandr\n")
+		V("using one atomic call to xrandr\n")
 		args := []string{}
 		for _, disableArgs := range disableOutputArgs {
 			args = append(args, disableArgs...)
@@ -418,7 +418,7 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		return []*exec.Cmd{cmd}, nil
 	}
 
-	verbosePrintf("splitting the configuration into several calls to xrandr\n")
+	V("splitting the configuration into several calls to xrandr\n")
 
 	// otherwise return several calls to xrandr
 	cmds := []*exec.Cmd{}

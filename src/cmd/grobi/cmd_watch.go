@@ -78,7 +78,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 	ch := make(chan Event)
 	go subscribeXEvents(ch, done)
 
-	verbosePrintf("successfully subscribed to X RANDR change events\n")
+	V("successfully subscribed to X RANDR change events\n")
 
 	var tickerCh <-chan time.Time
 	if globalOpts.PollInterval > 0 {
@@ -115,7 +115,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 				lastOutputs = newOutputs
 
 				if globalOpts.Pause > 0 {
-					verbosePrintf("disable polling for %d seconds\n", globalOpts.Pause)
+					V("disable polling for %d seconds\n", globalOpts.Pause)
 					disablePoll = true
 					backoffCh = time.After(time.Duration(globalOpts.Pause) * time.Second)
 				}
@@ -124,17 +124,17 @@ func (cmd CmdWatch) Execute(args []string) error {
 
 		select {
 		case ev := <-ch:
-			verbosePrintf("new RANDR change event received:\n")
-			verbosePrintf("  %v\n", ev)
+			V("new RANDR change event received:\n")
+			V("  %v\n", ev)
 			if ev.Error != nil {
 				return ev.Error
 			}
 
 			eventReceived = true
 		case <-tickerCh:
-			verbosePrintf("regularly checking xrandr\n")
+			V("regularly checking xrandr\n")
 		case <-backoffCh:
-			verbosePrintf("reenable polling\n")
+			V("reenable polling\n")
 			backoffCh = nil
 			disablePoll = false
 		}
