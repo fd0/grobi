@@ -370,6 +370,10 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 			args = append(args, "--right-of", lastOutput)
 		}
 
+		if rule.Primary == name {
+			args = append(args, "--primary")
+		}
+
 		lastOutput = name
 		enableOutputArgs = append(enableOutputArgs, args)
 	}

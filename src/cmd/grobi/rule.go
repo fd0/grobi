@@ -13,6 +13,8 @@ type Rule struct {
 	ConfigureSingle  string   `yaml:"configure_single"`
 	ConfigureCommand string   `yaml:"configure_command"`
 
+	Primary string `yaml:"primary"`
+
 	DisableOrder []string `yaml:"disable_order"`
 
 	Atomic bool `yaml:"atomic"`
