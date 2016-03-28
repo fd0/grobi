@@ -98,6 +98,8 @@ func (cmd CmdWatch) Execute(args []string) error {
 			if eventReceived {
 				newOutputs, err = DetectOutputs()
 				eventReceived = false
+				V("current outputs: %v", newOutputs)
+				V("last outputs:    %v", lastOutputs)
 			} else {
 				newOutputs, err = GetOutputs()
 			}
@@ -107,6 +109,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 			}
 
 			if !lastOutputs.Equals(newOutputs) {
+				V("  new output configuration found")
 				err = MatchRules(globalOpts.cfg.Rules, newOutputs)
 				if err != nil {
 					return err
@@ -124,8 +127,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 
 		select {
 		case ev := <-ch:
-			V("new RANDR change event received:\n")
-			V("  %v\n", ev)
+			V("new RANDR change event received: %v\n", ev)
 			if ev.Error != nil {
 				return ev.Error
 			}
