@@ -1,0 +1,10 @@
+[Unit]
+Description=grobi display auto config daemon
+
+[Service]
+Type=simple
+ExecStart=/bin/sh -c "grobi watch -v"
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

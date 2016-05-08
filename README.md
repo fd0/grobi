@@ -48,6 +48,15 @@ Have a look at the sample configuration file provided at
 [`doc/grobi.conf`](doc/grobi.conf). If you have any questions, please open an
 issue on GitHub.
 
+There is also a [sample systemd](doc/grobi.service) unit file you can run as a
+user. This requires that the `PATH` and `DISPLAY` environment variables can be
+accessed, so run the following command in e.g. your `~/.xsession` file just
+before starting the window manager:
+
+```
+systemctl --user import-environment DISPLAY PATH
+```
+
 # Development
 
 Grobi is developed using the build tool [gb](https://getgb.io). It needs at
