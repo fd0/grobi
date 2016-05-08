@@ -57,6 +57,22 @@ before starting the window manager:
 systemctl --user import-environment DISPLAY PATH
 ```
 
+Run the command once to import the environment for the current session, then
+execute the following commands to install and start the unit:
+
+```
+mkdir ~/.config/systemd/user
+cp doc/grobi.service ~/.config/systemd/user
+systemctl --user enable grobi
+systemctl --user start grobi
+```
+
+You can then use `systemctl` to check the current status:
+
+```
+systemctl --user status grobi
+```
+
 # Development
 
 Grobi is developed using the build tool [gb](https://getgb.io). It needs at
