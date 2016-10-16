@@ -4,7 +4,8 @@ Description=grobi display auto config daemon
 [Service]
 Type=simple
 ExecStart=/bin/sh -c "grobi watch -v"
-Restart=on-failure
+Restart=always
+RestartSec=2s
 
 [Install]
 WantedBy=default.target
