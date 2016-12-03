@@ -21,6 +21,18 @@ var (
 	runTests   bool
 )
 
+var config = struct {
+	Name      string
+	Namespace string
+	Main      string
+	Tests     []string
+}{
+	Name:      "grobi",               // name of the program executable and directory
+	Namespace: "grobi",               // subdir of GOPATH, e.g. "github.com/foo/bar"
+	Main:      "grobi/cmd/grobi",     // package name for the main package
+	Tests:     []string{"grobi/..."}, // tests to run
+}
+
 const timeFormat = "2006-01-02 15:04:05"
 
 // specialDir returns true if the file begins with a special character ('.' or '_').
@@ -161,10 +173,12 @@ func showUsage(output io.Writer) {
 	fmt.Fprintf(output, "USAGE: go run build.go OPTIONS\n")
 	fmt.Fprintf(output, "\n")
 	fmt.Fprintf(output, "OPTIONS:\n")
-	fmt.Fprintf(output, "  -v     --verbose     output more messages\n")
-	fmt.Fprintf(output, "  -t     --tags        specify additional build tags\n")
-	fmt.Fprintf(output, "  -k     --keep-gopath do not remove the GOPATH after build\n")
-	fmt.Fprintf(output, "  -T     --test        run tests\n")
+	fmt.Fprintf(output, "  -v     --verbose       output more messages\n")
+	fmt.Fprintf(output, "  -t     --tags          specify additional build tags\n")
+	fmt.Fprintf(output, "  -k     --keep-gopath   do not remove the GOPATH after build\n")
+	fmt.Fprintf(output, "  -T     --test          run tests\n")
+	fmt.Fprintf(output, "         --goos value    set GOOS for cross-compilation\n")
+	fmt.Fprintf(output, "         --goarch value  set GOARCH for cross-compilation\n")
 }
 
 func verbosePrintf(message string, args ...interface{}) {
@@ -190,10 +204,11 @@ func cleanEnv() (env []string) {
 }
 
 // build runs "go build args..." with GOPATH set to gopath.
-func build(gopath string, args ...string) error {
+func build(cwd, goos, goarch, gopath string, args ...string) error {
 	args = append([]string{"build"}, args...)
 	cmd := exec.Command("go", args...)
-	cmd.Env = append(cleanEnv(), "GOPATH="+gopath)
+	cmd.Env = append(cleanEnv(), "GOPATH="+gopath, "GOARCH="+goarch, "GOOS="+goos)
+	cmd.Dir = cwd
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	verbosePrintf("go %s\n", args)
@@ -202,10 +217,11 @@ func build(gopath string, args ...string) error {
 }
 
 // test runs "go test args..." with GOPATH set to gopath.
-func test(gopath string, args ...string) error {
+func test(cwd, gopath string, args ...string) error {
 	args = append([]string{"test"}, args...)
 	cmd := exec.Command("go", args...)
 	cmd.Env = append(cleanEnv(), "GOPATH="+gopath)
+	cmd.Dir = cwd
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	verbosePrintf("go %s\n", args)
@@ -269,14 +285,8 @@ type Constants map[string]string
 func (cs Constants) LDFlags() string {
 	l := make([]string, 0, len(cs))
 
-	if runtime.Version() < "go1.5" {
-		for k, v := range cs {
-			l = append(l, fmt.Sprintf(`-X %q %q`, k, v))
-		}
-	} else {
-		for k, v := range cs {
-			l = append(l, fmt.Sprintf(`-X "%s=%s"`, k, v))
-		}
+	for k, v := range cs {
+		l = append(l, fmt.Sprintf(`-X "%s=%s"`, k, v))
 	}
 
 	return strings.Join(l, " ")
@@ -287,6 +297,10 @@ func main() {
 
 	skipNext := false
 	params := os.Args[1:]
+
+	targetGOOS := runtime.GOOS
+	targetGOARCH := runtime.GOARCH
+
 	for i, arg := range params {
 		if skipNext {
 			skipNext = false
@@ -299,12 +313,22 @@ func main() {
 		case "-k", "--keep-gopath":
 			keepGopath = true
 		case "-t", "-tags", "--tags":
+			if i+1 >= len(params) {
+				die("-t given but no tag specified")
+			}
 			skipNext = true
 			buildTags = strings.Split(params[i+1], " ")
 		case "-T", "--test":
 			runTests = true
+		case "--goos":
+			skipNext = true
+			targetGOOS = params[i+1]
+		case "--goarch":
+			skipNext = true
+			targetGOARCH = params[i+1]
 		case "-h":
 			showUsage(os.Stdout)
+			return
 		default:
 			fmt.Fprintf(os.Stderr, "Error: unknown option %q\n\n", arg)
 			showUsage(os.Stderr)
@@ -328,14 +352,14 @@ func main() {
 		die("Getwd(): %v\n", err)
 	}
 
-	gopath, err := ioutil.TempDir("", "grobi-build-")
+	gopath, err := ioutil.TempDir("", fmt.Sprintf("%v-build-", config.Name))
 	if err != nil {
 		die("TempDir(): %v\n", err)
 	}
 
 	verbosePrintf("create GOPATH at %v\n", gopath)
-	if err = updateGopath(gopath, filepath.Join(root, "src"), "grobi"); err != nil {
-		die("copying files from %v to %v failed: %v\n", root, gopath, err)
+	if err = updateGopath(gopath, filepath.Join(root, "src"), config.Namespace); err != nil {
+		die("copying files from %v/src to %v/src failed: %v\n", root, gopath, err)
 	}
 
 	vendor := filepath.Join(root, "vendor", "src")
@@ -356,23 +380,33 @@ func main() {
 		}
 	}()
 
-	output := "grobi"
+	outputFilename := config.Name
+	if targetGOOS == "windows" {
+		outputFilename += ".exe"
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		die("Getwd() returned %v\n", err)
+	}
+	output := filepath.Join(cwd, outputFilename)
+
 	version := getVersion()
 	compileTime := time.Now().Format(timeFormat)
 	constants := Constants{`main.compiledAt`: compileTime}
 	if version != "" {
 		constants["main.version"] = version
 	}
-	ldflags := "-s " + constants.LDFlags()
+	ldflags := "-s -w " + constants.LDFlags()
 	verbosePrintf("ldflags: %s\n", ldflags)
 
 	args := []string{
 		"-tags", strings.Join(buildTags, " "),
 		"-ldflags", ldflags,
-		"-o", output, "grobi/cmd/grobi",
+		"-o", output, config.Main,
 	}
 
-	err = build(gopath, args...)
+	err = build(filepath.Join(gopath, "src"), targetGOOS, targetGOARCH, gopath, args...)
 	if err != nil {
 		die("build failed: %v\n", err)
 	}
@@ -380,7 +414,7 @@ func main() {
 	if runTests {
 		verbosePrintf("running tests\n")
 
-		err = test(gopath, "github.com/restic/restic/...")
+		err = test(cwd, gopath, config.Tests...)
 		if err != nil {
 			die("running tests failed: %v\n", err)
 		}
