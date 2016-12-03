@@ -2,7 +2,8 @@ language: go
 sudo: false
 
 go:
-  - 1.6
+  - 1.6.4
+  - 1.7.4
 
 install:
   - go version
@@ -14,10 +15,9 @@ install:
   - gb info
 
 script:
-  - go run build.go
   - gb build
   - gb test
-  - go run build.go
+  - go run build.go -v -T
   - diff <(GOPATH="$PWD:$PWD/vendor" goimports -d ./src) <(printf "")
 
 after_success:
