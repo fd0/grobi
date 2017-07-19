@@ -18,6 +18,7 @@ type Output struct {
 	Modes     Modes
 	Connected bool
 	Primary   bool
+	Edid      string
 }
 
 func (o Output) String() string {
@@ -35,6 +36,8 @@ func (o Output) String() string {
 	if len(o.Modes) > 0 {
 		str += fmt.Sprintf(" %v", o.Modes)
 	}
+
+	str += fmt.Sprintf(" [%v]", o.Edid)
 	return str
 }
 
@@ -233,6 +236,29 @@ func parseModeLine(line string) (mode Mode, err error) {
 	return mode, nil
 }
 
+var errNotEdidLine = errors.New("not an edid line")
+
+// parseEdidLine returns the partial EDID on that line
+func parseEdidLine(line string) (edid string, err error) {
+	if !strings.HasPrefix(line, "		") {
+		return "", errNotEdidLine
+	}
+
+	ws := bufio.NewScanner(bytes.NewReader([]byte(line)))
+	ws.Split(bufio.ScanWords)
+
+	if !ws.Scan() {
+		return "", fmt.Errorf("line too short, no edid part found: %s", line)
+	}
+	edid = ws.Text()
+
+	if ws.Scan() {
+		return "", fmt.Errorf("line too long, expected only one edid part: %s", line)
+	}
+
+	return edid, nil
+}
+
 // RandrParse returns the list of outputs parsed from the reader.
 func RandrParse(rd io.Reader) (outputs Outputs, err error) {
 	ls := bufio.NewScanner(rd)
@@ -240,6 +266,8 @@ func RandrParse(rd io.Reader) (outputs Outputs, err error) {
 	const (
 		StateStart = iota
 		StateOutput
+		StateAdditionalProperties
+		StateEdid
 		StateMode
 	)
 
@@ -266,7 +294,30 @@ nextLine:
 				if err != nil {
 					return nil, err
 				}
-				state = StateMode
+				state = StateAdditionalProperties
+				continue nextLine
+
+			case StateAdditionalProperties:
+				if strings.HasPrefix(line, "	EDID:") {
+					state = StateEdid
+					continue nextLine
+				}
+				if !strings.HasPrefix(line, "	") {
+					state = StateMode
+					continue
+				}
+				continue nextLine
+
+			case StateEdid:
+				edid_part, err := parseEdidLine(line)
+				if err == errNotEdidLine {
+					state = StateAdditionalProperties
+					continue
+				}
+				if err != nil {
+					return nil, err
+				}
+				output.Edid += edid_part
 				continue nextLine
 
 			case StateMode:
@@ -296,7 +347,7 @@ nextLine:
 }
 
 func runXrandr(extraArgs ...string) *exec.Cmd {
-	args := []string{"--query"}
+	args := []string{"--query", "--props"}
 	args = append(args, extraArgs...)
 	cmd := exec.Command("xrandr", args...)
 	cmd.Stderr = os.Stderr
