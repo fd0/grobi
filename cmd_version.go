@@ -21,8 +21,8 @@ func init() {
 }
 
 func (cmd CmdVersion) Execute(args []string) error {
-	fmt.Printf("grobi %s\ncompiled at %s with %v\n",
-		version, compiledAt, runtime.Version())
+	fmt.Printf("grobi %s\ncompiled with %v on %v\n",
+		version, runtime.Version(), runtime.GOOS)
 
 	return nil
 }
