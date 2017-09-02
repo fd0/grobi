@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -18,7 +20,7 @@ type Output struct {
 	Modes     Modes
 	Connected bool
 	Primary   bool
-	Edid      string
+	MonitorId string
 }
 
 func (o Output) String() string {
@@ -37,7 +39,7 @@ func (o Output) String() string {
 		str += fmt.Sprintf(" %v", o.Modes)
 	}
 
-	str += fmt.Sprintf(" [%v]", o.Edid)
+	str += fmt.Sprintf(" [%v]", o.MonitorId)
 	return str
 }
 
@@ -58,6 +60,10 @@ func (o Output) Equals(other Output) bool {
 		if m1 != m2 {
 			return false
 		}
+	}
+
+	if o.MonitorId != other.MonitorId {
+		return false
 	}
 
 	return true
@@ -145,6 +151,41 @@ func (m Modes) String() string {
 		str = append(str, mode.String())
 	}
 	return strings.Join(str, " ")
+}
+
+// Generates the monitor id from the edid
+func GenerateMonitorId(edid string) (string, error) {
+	var errEdidCorrupted = errors.New("Edid corrupted: " + edid)
+	if len(edid) < 32 || edid[:16] != "00ffffffffffff00" {
+		return "", errEdidCorrupted
+	}
+	edid = edid[16:]
+	edid_bytes, err := hex.DecodeString(edid)
+	if err != nil {
+		return "", err
+	}
+
+	manufacturer_enc := binary.BigEndian.Uint16(edid_bytes[:2])
+
+	// The first bit is resevered and needs to be zero
+	if manufacturer_enc&0x8000 != 0x0000 {
+		return "", errEdidCorrupted
+	}
+
+	// Decode the manufacturer 'A' = 0b00001, 'B' = 0b00010, ..., 'Z' = 0b11010
+	var manufacturer string
+	mask := uint16(0x7C00) // 0b0111110000000000
+	for i := uint(0); i <= 10; i += 5 {
+		number := ((manufacturer_enc & (mask >> i)) >> (10 - i))
+		manufacturer += string(number + 'A' - 1)
+	}
+
+	// Decode the product and serial number
+	product_number := binary.LittleEndian.Uint16(edid_bytes[2:4])
+	serial_number := binary.LittleEndian.Uint32(edid_bytes[4:8])
+
+	str := fmt.Sprintf("%s-%d-%d", manufacturer, product_number, serial_number)
+	return str, nil
 }
 
 // errNotModeLine is returned by parseModeLine when the line doesn't match
@@ -272,8 +313,9 @@ func RandrParse(rd io.Reader) (outputs Outputs, err error) {
 	)
 
 	var (
-		state  = StateStart
-		output Output
+		state       = StateStart
+		output      Output
+		currentEdid string
 	)
 
 nextLine:
@@ -300,6 +342,7 @@ nextLine:
 			case StateAdditionalProperties:
 				if strings.HasPrefix(line, "	EDID:") {
 					state = StateEdid
+					currentEdid = ""
 					continue nextLine
 				}
 				if !strings.HasPrefix(line, "	") {
@@ -311,13 +354,18 @@ nextLine:
 			case StateEdid:
 				edid_part, err := parseEdidLine(line)
 				if err == errNotEdidLine {
+					monitorId, err := GenerateMonitorId(currentEdid)
+					if err != nil {
+						return nil, err
+					}
+					output.MonitorId = monitorId
 					state = StateAdditionalProperties
 					continue
 				}
 				if err != nil {
 					return nil, err
 				}
-				output.Edid += edid_part
+				currentEdid += edid_part
 				continue nextLine
 
 			case StateMode:

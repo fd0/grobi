@@ -409,7 +409,7 @@ VIRTUAL1 disconnected (normal left inverted right x axis y axis)`,
 				},
 				Connected: true,
 				Primary:   true,
-				Edid: "00ffffffffffff000daeb114000000000c190104951f117802ff35925552952925505400000001010101010101010101010101010101b43b804a71383440503c680034ad10000018000000fe004e3134304843452d4541410a20000000fe00434d4e0a202020202020202020000000fe004e3134304843452d4541410a2000a2",
+				MonitorId: "CMN-5297-0",
 			},
 			Output{Name: "DP1"},
 			Output{Name: "DP2"},
@@ -433,7 +433,7 @@ VIRTUAL1 disconnected (normal left inverted right x axis y axis)`,
 					{Name: "720x400"},
 				},
 				Connected: true,
-				Edid: "00ffffffffffff004c2d3a0a353233302417010380351e782af711a3564f9e280f5054bfef80714f81c0810081809500a9c0b3000101023a801871382d40582c4500132b2100001e011d007251d01e206e285500132b2100001e000000fd00324b1e5111000a202020202020000000fc00533234433335300a2020202020011802031af14690041f130312230907078301000066030c00100080011d00bc52d01e20b8285540132b2100001e8c0ad090204031200c405500132b210000188c0ad08a20e02d10103e9600132b21000018000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000099",
+				MonitorId: "SAM-2618-808661557",
 			},
 			Output{Name: "VIRTUAL1"},
 		},
@@ -481,10 +481,10 @@ func TestRandrParse(t *testing.T) {
 					out1.Modes, out2.Modes)
 			}
 
-			if out1.Edid != out2.Edid {
-				t.Errorf("test %d, output %d: Edids not equal:\n  want %v\n  got  %v",
+			if out1.MonitorId != out2.MonitorId {
+				t.Errorf("test %d, output %d: Monitor IDs not equal:\n  want %v\n  got  %v",
 					ti, i,
-					out1.Edid, out2.Edid)
+					out1.MonitorId, out2.MonitorId)
 			}
 		}
 	}
@@ -591,6 +591,63 @@ func TestParseModeLine(t *testing.T) {
 		if !reflect.DeepEqual(mode, test.mode) {
 			t.Errorf("test %d failed: expected Mode not found", i)
 			continue
+		}
+	}
+}
+
+var TestEdids = []struct {
+	edid      string
+	failure   bool
+	monitorId string
+}{
+	{
+		"00ffffffffffff004c2d3a0a353233302417010380351e782af711a3564f9e280f5054bfef80714f81c0810081809500a9c0b3000101023a801871382d40582c4500132b2100001e011d007251d01e206e285500132b2100001e000000fd00324b1e5111000a202020202020000000fc00533234433335300a2020202020011802031af14690041f130312230907078301000066030c00100080011d00bc52d01e20b8285540132b2100001e8c0ad090204031200c405500132b210000188c0ad08a20e02d10103e9600132b21000018000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000099",
+		false,
+		"SAM-2618-808661557",
+	},
+	{
+		"00ffffffffffff000daeb114000000000c190104951f117802ff35925552952925505400000001010101010101010101010101010101b43b804a71383440503c680034ad10000018000000fe004e3134304843452d4541410a20000000fe00434d4e0a202020202020202020000000fe004e3134304843452d4541410a2000a2",
+		false,
+		"CMN-5297-0",
+	},
+	{
+		"",
+		true,
+		"",
+	},
+	{
+		"00ffffffffffff004c2d3a0a3532333",
+		true,
+		"",
+	},
+	{
+		"00ffffffffffff004c2d3a0a35323330",
+		false,
+		"SAM-2618-808661557",
+	},
+	{
+		"00ffffeeffffff000daeb114000000000c190104951f117802ff35925552952925505400000001010101010101010101010101010101b43b804a71383440503c680034ad10000018000000fe004e3134304843452d4541410a20000000fe00434d4e0a202020202020202020000000fe004e3134304843452d4541410a2000a2",
+		true,
+		"",
+	},
+}
+
+func TestGenerateMonitorId(t *testing.T) {
+	for i, test := range TestEdids {
+		monitorId, err := GenerateMonitorId(test.edid)
+		if test.failure {
+			if err == nil {
+				t.Errorf("test %d did not return the expected error, but result: %v", i, monitorId)
+			}
+			continue
+		}
+		if err != nil {
+			t.Errorf("test %d failed: produced unexpected error: %v", i, err)
+			continue
+		}
+
+		if monitorId != test.monitorId {
+			t.Errorf("test %d failed: expected monitor ID: '%s', got monitor ID: '%s'", i, test.monitorId, monitorId)
 		}
 	}
 }
