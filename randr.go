@@ -75,11 +75,20 @@ type Outputs []Output
 // Present returns true iff the list of outputs contains the named output.
 func (os Outputs) Present(name string) bool {
 	for _, o := range os {
+		// Check legacy name
 		m, err := path.Match(name, o.Name)
 		if err != nil {
 			return false
 		}
+		if m {
+			return true
+		}
 
+		// Check extended name
+		m, err = path.Match(name, o.Name+"-"+o.MonitorId)
+		if err != nil {
+			return false
+		}
 		if m {
 			return true
 		}
@@ -91,12 +100,25 @@ func (os Outputs) Present(name string) bool {
 // it is connected.
 func (os Outputs) Connected(name string) bool {
 	for _, o := range os {
+		if !o.Connected {
+			continue
+		}
+
+		// Check legacy name
 		m, err := path.Match(name, o.Name)
 		if err != nil {
 			return false
 		}
+		if m {
+			return true
+		}
 
-		if m && o.Connected {
+		// Check extended name
+		m, err = path.Match(name, o.Name+"-"+o.MonitorId)
+		if err != nil {
+			return false
+		}
+		if m {
 			return true
 		}
 	}

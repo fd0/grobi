@@ -53,6 +53,24 @@ var testRules = []struct {
 		},
 		false,
 	},
+	{
+		Rule{
+			OutputsPresent: []string{"HDMI-SAM-2618-808661557"},
+		},
+		true,
+	},
+	{
+		Rule{
+			OutputsPresent: []string{"*-UNK-123-456"},
+		},
+		false,
+	},
+	{
+		Rule{
+			OutputsDisconnected: []string{"HDMI-UNK-123-456"},
+		},
+		true,
+	},
 }
 
 var testOutputs = []Output{
@@ -63,6 +81,7 @@ var testOutputs = []Output{
 			{"1377x768", true, true},
 			{"1024x768", false, false},
 		},
+		MonitorId: "CMN-5297-0",
 	},
 	{
 		Name:      "VGA",
@@ -79,6 +98,7 @@ var testOutputs = []Output{
 			{"1920x1080", true, true},
 			{"1024x768", false, false},
 		},
+		MonitorId: "SAM-2618-808661557",
 	},
 	{
 		Name: "DP2-1",
