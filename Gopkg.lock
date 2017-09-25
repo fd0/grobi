@@ -17,11 +17,11 @@
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "25c4ec802a7d637f88d584ab26798e94ad14c13b"
+  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4a1343fe8bdb1be4979c2d89a2cc2907abdea878b91b1208f714ba97ce114f4c"
+  inputs-digest = "cdd9793031308735e3b0f7d5971b8e6bac380698d3a1a1be9d17207f68c3416b"
   solver-name = "gps-cdcl"
   solver-version = 1
