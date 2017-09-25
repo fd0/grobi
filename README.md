@@ -73,21 +73,6 @@ You can then use `systemctl` to check the current status:
 systemctl --user status grobi
 ```
 
-# Development
-
-Grobi is developed using the build tool [gb](https://getgb.io). It needs at
-least Go 1.4 and can be installed by running the following command:
-
-```shell
-$ go get github.com/constabulary/gb/...
-```
-
-The program can be compiled using `gb` as follows:
-
-```shell
-$ gb build
-```
-
 # Compatibility
 
 Grobi follows [Semantic Versioning](http://semver.org) to clearly define which
