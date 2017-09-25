@@ -293,6 +293,151 @@ VIRTUAL1 disconnected (normal left inverted right x axis y axis)`,
 			},
 		},
 	},
+	{
+		`Screen 0: minimum 8 x 8, current 3840 x 1080, maximum 32767 x 32767
+eDP1 connected primary 1920x1080+1920+0 (normal left inverted right x axis y axis) 310mm x 170mm
+	EDID: 
+		00ffffffffffff000daeb11400000000
+		0c190104951f117802ff359255529529
+		25505400000001010101010101010101
+		010101010101b43b804a71383440503c
+		680034ad10000018000000fe004e3134
+		304843452d4541410a20000000fe0043
+		4d4e0a202020202020202020000000fe
+		004e3134304843452d4541410a2000a2
+	BACKLIGHT: 332 
+		range: (0, 852)
+	Backlight: 332 
+		range: (0, 852)
+	scaling mode: Full aspect 
+		supported: None, Full, Center, Full aspect
+	Broadcast RGB: Automatic 
+		supported: Automatic, Full, Limited 16:235
+	audio: auto 
+		supported: force-dvi, off, auto, on
+   1920x1080     60.01*+
+   1400x1050     59.98  
+   1600x900      60.00  
+   1280x1024     60.02  
+   1280x960      60.00  
+   1368x768      60.00  
+   1280x720      60.00  
+   1024x768      60.00  
+   1024x576      60.00  
+   960x540       60.00  
+   800x600       60.32    56.25  
+   864x486       60.00  
+   640x480       59.94  
+   720x405       60.00  
+   640x360       60.00  
+DP1 disconnected (normal left inverted right x axis y axis)
+	Broadcast RGB: Automatic 
+		supported: Automatic, Full, Limited 16:235
+	audio: auto 
+		supported: force-dvi, off, auto, on
+DP2 disconnected (normal left inverted right x axis y axis)
+	Broadcast RGB: Automatic 
+		supported: Automatic, Full, Limited 16:235
+	audio: auto 
+		supported: force-dvi, off, auto, on
+HDMI1 disconnected (normal left inverted right x axis y axis)
+	aspect ratio: Automatic 
+		supported: Automatic, 4:3, 16:9
+	Broadcast RGB: Automatic 
+		supported: Automatic, Full, Limited 16:235
+	audio: auto 
+		supported: force-dvi, off, auto, on
+HDMI2 connected 1920x1080+0+0 (normal left inverted right x axis y axis) 530mm x 300mm
+	EDID: 
+		00ffffffffffff004c2d3a0a35323330
+		2417010380351e782af711a3564f9e28
+		0f5054bfef80714f81c0810081809500
+		a9c0b3000101023a801871382d40582c
+		4500132b2100001e011d007251d01e20
+		6e285500132b2100001e000000fd0032
+		4b1e5111000a202020202020000000fc
+		00533234433335300a20202020200118
+		02031af14690041f1303122309070783
+		01000066030c00100080011d00bc52d0
+		1e20b8285540132b2100001e8c0ad090
+		204031200c405500132b210000188c0a
+		d08a20e02d10103e9600132b21000018
+		00000000000000000000000000000000
+		00000000000000000000000000000000
+		00000000000000000000000000000099
+	aspect ratio: Automatic 
+		supported: Automatic, 4:3, 16:9
+	Broadcast RGB: Automatic 
+		supported: Automatic, Full, Limited 16:235
+	audio: auto 
+		supported: force-dvi, off, auto, on
+   1920x1080     60.00*+  50.00    59.94  
+   1680x1050     59.88  
+   1600x900      60.00  
+   1280x1024     75.02    60.02  
+   1440x900      59.90  
+   1280x800      59.91  
+   1152x864      75.00  
+   1280x720      60.00    50.00    59.94  
+   1024x768      75.03    70.07    60.00  
+   832x624       74.55  
+   800x600       72.19    75.00    60.32    56.25  
+   720x576       50.00  
+   720x480       60.00    59.94  
+   640x480       75.00    72.81    66.67    60.00    59.94  
+   720x400       70.08  
+VIRTUAL1 disconnected (normal left inverted right x axis y axis)`,
+		[]Output{
+			Output{
+				Name: "eDP1",
+				Modes: []Mode{
+					{Name: "1920x1080", Default: true, Active: true},
+					{Name: "1400x1050"},
+					{Name: "1600x900"},
+					{Name: "1280x1024"},
+					{Name: "1280x960"},
+					{Name: "1368x768"},
+					{Name: "1280x720"},
+					{Name: "1024x768"},
+					{Name: "1024x576"},
+					{Name: "960x540"},
+					{Name: "800x600"},
+					{Name: "864x486"},
+					{Name: "640x480"},
+					{Name: "720x405"},
+					{Name: "640x360"},
+				},
+				Connected: true,
+				Primary:   true,
+				MonitorId: "CMN-5297-0",
+			},
+			Output{Name: "DP1"},
+			Output{Name: "DP2"},
+			Output{Name: "HDMI1"},
+			Output{Name: "HDMI2",
+				Modes: []Mode{
+					{Name: "1920x1080", Default: true, Active: true},
+					{Name: "1680x1050"},
+					{Name: "1600x900"},
+					{Name: "1280x1024"},
+					{Name: "1440x900"},
+					{Name: "1280x800"},
+					{Name: "1152x864"},
+					{Name: "1280x720"},
+					{Name: "1024x768"},
+					{Name: "832x624"},
+					{Name: "800x600"},
+					{Name: "720x576"},
+					{Name: "720x480"},
+					{Name: "640x480"},
+					{Name: "720x400"},
+				},
+				Connected: true,
+				MonitorId: "SAM-2618-808661557",
+			},
+			Output{Name: "VIRTUAL1"},
+		},
+	},
 }
 
 func TestRandrParse(t *testing.T) {
@@ -334,6 +479,12 @@ func TestRandrParse(t *testing.T) {
 				t.Errorf("test %d, output %d: list of modes not equal:\n  want %v\n  got  %v",
 					ti, i,
 					out1.Modes, out2.Modes)
+			}
+
+			if out1.MonitorId != out2.MonitorId {
+				t.Errorf("test %d, output %d: Monitor IDs not equal:\n  want %v\n  got  %v",
+					ti, i,
+					out1.MonitorId, out2.MonitorId)
 			}
 		}
 	}
@@ -440,6 +591,63 @@ func TestParseModeLine(t *testing.T) {
 		if !reflect.DeepEqual(mode, test.mode) {
 			t.Errorf("test %d failed: expected Mode not found", i)
 			continue
+		}
+	}
+}
+
+var TestEdids = []struct {
+	edid      string
+	failure   bool
+	monitorId string
+}{
+	{
+		"00ffffffffffff004c2d3a0a353233302417010380351e782af711a3564f9e280f5054bfef80714f81c0810081809500a9c0b3000101023a801871382d40582c4500132b2100001e011d007251d01e206e285500132b2100001e000000fd00324b1e5111000a202020202020000000fc00533234433335300a2020202020011802031af14690041f130312230907078301000066030c00100080011d00bc52d01e20b8285540132b2100001e8c0ad090204031200c405500132b210000188c0ad08a20e02d10103e9600132b21000018000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000099",
+		false,
+		"SAM-2618-808661557",
+	},
+	{
+		"00ffffffffffff000daeb114000000000c190104951f117802ff35925552952925505400000001010101010101010101010101010101b43b804a71383440503c680034ad10000018000000fe004e3134304843452d4541410a20000000fe00434d4e0a202020202020202020000000fe004e3134304843452d4541410a2000a2",
+		false,
+		"CMN-5297-0",
+	},
+	{
+		"",
+		true,
+		"",
+	},
+	{
+		"00ffffffffffff004c2d3a0a3532333",
+		true,
+		"",
+	},
+	{
+		"00ffffffffffff004c2d3a0a35323330",
+		false,
+		"SAM-2618-808661557",
+	},
+	{
+		"00ffffeeffffff000daeb114000000000c190104951f117802ff35925552952925505400000001010101010101010101010101010101b43b804a71383440503c680034ad10000018000000fe004e3134304843452d4541410a20000000fe00434d4e0a202020202020202020000000fe004e3134304843452d4541410a2000a2",
+		true,
+		"",
+	},
+}
+
+func TestGenerateMonitorId(t *testing.T) {
+	for i, test := range TestEdids {
+		monitorId, err := GenerateMonitorId(test.edid)
+		if test.failure {
+			if err == nil {
+				t.Errorf("test %d did not return the expected error, but result: %v", i, monitorId)
+			}
+			continue
+		}
+		if err != nil {
+			t.Errorf("test %d failed: produced unexpected error: %v", i, err)
+			continue
+		}
+
+		if monitorId != test.monitorId {
+			t.Errorf("test %d failed: expected monitor ID: '%s', got monitor ID: '%s'", i, test.monitorId, monitorId)
 		}
 	}
 }

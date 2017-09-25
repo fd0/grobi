@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -18,6 +20,7 @@ type Output struct {
 	Modes     Modes
 	Connected bool
 	Primary   bool
+	MonitorId string
 }
 
 func (o Output) String() string {
@@ -35,6 +38,8 @@ func (o Output) String() string {
 	if len(o.Modes) > 0 {
 		str += fmt.Sprintf(" %v", o.Modes)
 	}
+
+	str += fmt.Sprintf(" [%v]", o.MonitorId)
 	return str
 }
 
@@ -57,6 +62,10 @@ func (o Output) Equals(other Output) bool {
 		}
 	}
 
+	if o.MonitorId != other.MonitorId {
+		return false
+	}
+
 	return true
 }
 
@@ -66,11 +75,20 @@ type Outputs []Output
 // Present returns true iff the list of outputs contains the named output.
 func (os Outputs) Present(name string) bool {
 	for _, o := range os {
+		// Check legacy name
 		m, err := path.Match(name, o.Name)
 		if err != nil {
 			return false
 		}
+		if m {
+			return true
+		}
 
+		// Check extended name
+		m, err = path.Match(name, o.Name+"-"+o.MonitorId)
+		if err != nil {
+			return false
+		}
 		if m {
 			return true
 		}
@@ -82,12 +100,25 @@ func (os Outputs) Present(name string) bool {
 // it is connected.
 func (os Outputs) Connected(name string) bool {
 	for _, o := range os {
+		if !o.Connected {
+			continue
+		}
+
+		// Check legacy name
 		m, err := path.Match(name, o.Name)
 		if err != nil {
 			return false
 		}
+		if m {
+			return true
+		}
 
-		if m && o.Connected {
+		// Check extended name
+		m, err = path.Match(name, o.Name+"-"+o.MonitorId)
+		if err != nil {
+			return false
+		}
+		if m {
 			return true
 		}
 	}
@@ -142,6 +173,41 @@ func (m Modes) String() string {
 		str = append(str, mode.String())
 	}
 	return strings.Join(str, " ")
+}
+
+// Generates the monitor id from the edid
+func GenerateMonitorId(edid string) (string, error) {
+	var errEdidCorrupted = errors.New("Edid corrupted: " + edid)
+	if len(edid) < 32 || edid[:16] != "00ffffffffffff00" {
+		return "", errEdidCorrupted
+	}
+	edid = edid[16:]
+	edid_bytes, err := hex.DecodeString(edid)
+	if err != nil {
+		return "", err
+	}
+
+	manufacturer_enc := binary.BigEndian.Uint16(edid_bytes[:2])
+
+	// The first bit is resevered and needs to be zero
+	if manufacturer_enc&0x8000 != 0x0000 {
+		return "", errEdidCorrupted
+	}
+
+	// Decode the manufacturer 'A' = 0b00001, 'B' = 0b00010, ..., 'Z' = 0b11010
+	var manufacturer string
+	mask := uint16(0x7C00) // 0b0111110000000000
+	for i := uint(0); i <= 10; i += 5 {
+		number := ((manufacturer_enc & (mask >> i)) >> (10 - i))
+		manufacturer += string(number + 'A' - 1)
+	}
+
+	// Decode the product and serial number
+	product_number := binary.LittleEndian.Uint16(edid_bytes[2:4])
+	serial_number := binary.LittleEndian.Uint32(edid_bytes[4:8])
+
+	str := fmt.Sprintf("%s-%d-%d", manufacturer, product_number, serial_number)
+	return str, nil
 }
 
 // errNotModeLine is returned by parseModeLine when the line doesn't match
@@ -233,6 +299,29 @@ func parseModeLine(line string) (mode Mode, err error) {
 	return mode, nil
 }
 
+var errNotEdidLine = errors.New("not an edid line")
+
+// parseEdidLine returns the partial EDID on that line
+func parseEdidLine(line string) (edid string, err error) {
+	if !strings.HasPrefix(line, "		") {
+		return "", errNotEdidLine
+	}
+
+	ws := bufio.NewScanner(bytes.NewReader([]byte(line)))
+	ws.Split(bufio.ScanWords)
+
+	if !ws.Scan() {
+		return "", fmt.Errorf("line too short, no edid part found: %s", line)
+	}
+	edid = ws.Text()
+
+	if ws.Scan() {
+		return "", fmt.Errorf("line too long, expected only one edid part: %s", line)
+	}
+
+	return edid, nil
+}
+
 // RandrParse returns the list of outputs parsed from the reader.
 func RandrParse(rd io.Reader) (outputs Outputs, err error) {
 	ls := bufio.NewScanner(rd)
@@ -240,12 +329,15 @@ func RandrParse(rd io.Reader) (outputs Outputs, err error) {
 	const (
 		StateStart = iota
 		StateOutput
+		StateAdditionalProperties
+		StateEdid
 		StateMode
 	)
 
 	var (
-		state  = StateStart
-		output Output
+		state       = StateStart
+		output      Output
+		currentEdid string
 	)
 
 nextLine:
@@ -266,7 +358,36 @@ nextLine:
 				if err != nil {
 					return nil, err
 				}
-				state = StateMode
+				state = StateAdditionalProperties
+				continue nextLine
+
+			case StateAdditionalProperties:
+				if strings.HasPrefix(line, "	EDID:") {
+					state = StateEdid
+					currentEdid = ""
+					continue nextLine
+				}
+				if !strings.HasPrefix(line, "	") {
+					state = StateMode
+					continue
+				}
+				continue nextLine
+
+			case StateEdid:
+				edid_part, err := parseEdidLine(line)
+				if err == errNotEdidLine {
+					monitorId, err := GenerateMonitorId(currentEdid)
+					if err != nil {
+						return nil, err
+					}
+					output.MonitorId = monitorId
+					state = StateAdditionalProperties
+					continue
+				}
+				if err != nil {
+					return nil, err
+				}
+				currentEdid += edid_part
 				continue nextLine
 
 			case StateMode:
@@ -296,7 +417,7 @@ nextLine:
 }
 
 func runXrandr(extraArgs ...string) *exec.Cmd {
-	args := []string{"--query"}
+	args := []string{"--query", "--props"}
 	args = append(args, extraArgs...)
 	cmd := exec.Command("xrandr", args...)
 	cmd.Stderr = os.Stderr
