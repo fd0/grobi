@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"runtime"
 	"time"
 
 	"github.com/BurntSushi/xgb"
@@ -78,6 +79,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 	ch := make(chan Event)
 	go subscribeXEvents(ch, done)
 
+	V("grobi %s, compiled with %v on %v\n", version, runtime.Version(), runtime.GOOS)
 	V("successfully subscribed to X RANDR change events\n")
 
 	var tickerCh <-chan time.Time
