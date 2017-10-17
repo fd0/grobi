@@ -115,7 +115,10 @@ func (cmd CmdWatch) Execute(args []string) error {
 					return err
 				}
 
-				lastOutputs = newOutputs
+				lastOutputs, err = DetectOutputs()
+				if err != nil {
+					return err
+				}
 
 				if globalOpts.Pause > 0 {
 					V("disable polling for %d seconds\n", globalOpts.Pause)
