@@ -36,10 +36,16 @@ func (o Output) String() string {
 	str := fmt.Sprintf("%s%s", o.Name, con)
 
 	if len(o.Modes) > 0 {
-		str += fmt.Sprintf(" %v", o.Modes)
+		for _, m := range o.Modes {
+			if m.Active || m.Default {
+				str += fmt.Sprintf(" %v", m)
+			}
+		}
 	}
 
-	str += fmt.Sprintf(" [%v]", o.MonitorId)
+	if o.MonitorId != "" {
+		str += fmt.Sprintf(" [%v]", o.MonitorId)
+	}
 	return str
 }
 
