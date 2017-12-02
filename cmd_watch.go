@@ -91,33 +91,38 @@ func (cmd CmdWatch) Execute(args []string) error {
 	var disablePoll bool
 	var eventReceived bool
 
-	var lastOutputs Outputs
+	var lastRule Rule
 	for {
 		if !disablePoll {
-			var newOutputs Outputs
+			var outputs Outputs
 			var err error
 
 			if eventReceived {
-				newOutputs, err = DetectOutputs()
+				outputs, err = DetectOutputs()
 				eventReceived = false
-				V("current outputs: %v", newOutputs)
-				V("last outputs:    %v", lastOutputs)
 			} else {
-				newOutputs, err = GetOutputs()
+				outputs, err = GetOutputs()
 			}
 
 			if err != nil {
 				return err
 			}
 
-			if !lastOutputs.Equals(newOutputs) {
-				V("  new output configuration found")
-				err = MatchRules(globalOpts.cfg.Rules, newOutputs)
+			rule, err := MatchRules(globalOpts.cfg.Rules, outputs)
+			if err != nil {
+				return err
+			}
+
+			if rule.Name != lastRule.Name {
+				V("outputs: %v", outputs)
+				V("new rule found: %v", rule.Name)
+
+				err = ApplyRule(outputs, rule)
 				if err != nil {
 					return err
 				}
 
-				lastOutputs = newOutputs
+				lastRule = rule
 
 				if globalOpts.Pause > 0 {
 					V("disable polling for %d seconds\n", globalOpts.Pause)
@@ -129,7 +134,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 
 		select {
 		case ev := <-ch:
-			V("new RANDR change event received: %v\n", ev)
+			V("new RANDR change event received\n")
 			if ev.Error != nil {
 				return ev.Error
 			}
