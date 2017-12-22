@@ -35,5 +35,7 @@ func (cmd CmdUpdate) Execute(args []string) error {
 		return err
 	}
 
+	V("rule %q matches\n", rule.Name)
+
 	return ApplyRule(outputs, rule)
 }
