@@ -45,8 +45,12 @@ Available commands:
 # Configuration
 
 Have a look at the sample configuration file provided at
-[`doc/grobi.conf`](doc/grobi.conf). If you have any questions, please open an
-issue on GitHub.
+[`doc/grobi.conf`](doc/grobi.conf). By default, `grobi` uses the [XDG directory
+standard](https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html)
+to search for the config file. Most users will probably put the config file to
+`~/.config/grobi.conf`.
+
+If you have any questions, please open an issue on GitHub.
 
 There is also a [sample systemd](doc/grobi.service) unit file you can run as a
 user. This requires that the `PATH` and `DISPLAY` environment variables can be
