@@ -182,21 +182,26 @@ func (m Modes) String() string {
 }
 
 // Generates the monitor id from the edid
-func GenerateMonitorId(edid string) (string, error) {
-	var errEdidCorrupted = errors.New("Edid corrupted: " + edid)
-	if len(edid) < 32 || edid[:16] != "00ffffffffffff00" {
+func GenerateMonitorId(s string) (string, error) {
+	var errEdidCorrupted = errors.New("corrupt EDID: " + s)
+	if len(s) < 32 || s[:16] != "00ffffffffffff00" {
 		return "", errEdidCorrupted
 	}
-	edid = edid[16:]
-	edid_bytes, err := hex.DecodeString(edid)
+
+	edid, err := hex.DecodeString(s)
 	if err != nil {
 		return "", err
 	}
 
-	manufacturer_enc := binary.BigEndian.Uint16(edid_bytes[:2])
+	// we only parse EDID 1.3 and 1.4
+	if edid[18] != 1 || (edid[19] < 3 || edid[19] > 4) {
+		return "", fmt.Errorf("unknown EDID version %d.%d", edid[18], edid[19])
+	}
+
+	manuf := binary.BigEndian.Uint16(edid[8:10])
 
 	// The first bit is resevered and needs to be zero
-	if manufacturer_enc&0x8000 != 0x0000 {
+	if manuf&0x8000 != 0x0000 {
 		return "", errEdidCorrupted
 	}
 
@@ -204,15 +209,33 @@ func GenerateMonitorId(edid string) (string, error) {
 	var manufacturer string
 	mask := uint16(0x7C00) // 0b0111110000000000
 	for i := uint(0); i <= 10; i += 5 {
-		number := ((manufacturer_enc & (mask >> i)) >> (10 - i))
+		number := ((manuf & (mask >> i)) >> (10 - i))
 		manufacturer += string(number + 'A' - 1)
 	}
 
 	// Decode the product and serial number
-	product_number := binary.LittleEndian.Uint16(edid_bytes[2:4])
-	serial_number := binary.LittleEndian.Uint32(edid_bytes[4:8])
+	product := binary.LittleEndian.Uint16(edid[10:12])
+	serial := binary.LittleEndian.Uint32(edid[12:16])
 
-	str := fmt.Sprintf("%s-%d-%d", manufacturer, product_number, serial_number)
+	// Decode four descriptor blocks
+	var displayName, displaySerialNumber string
+	for i := 0; i < 4; i++ {
+		d := edid[54+i*18 : 54+18+i*18]
+
+		// interesting descriptors start with three zeroes
+		if d[0] != 0 || d[1] != 0 || d[2] != 0 {
+			continue
+		}
+
+		switch d[3] {
+		case 0xff: // display serial number
+			displaySerialNumber = strings.TrimSpace(string(d[5:]))
+		case 0xfc: // display name
+			displayName = strings.TrimSpace(string(d[5:]))
+		}
+	}
+
+	str := fmt.Sprintf("%s-%d-%d-%v-%v", manufacturer, product, serial, displayName, displaySerialNumber)
 	return str, nil
 }
 
