@@ -75,6 +75,17 @@ func (o Output) Equals(other Output) bool {
 	return true
 }
 
+// Active returns true if an output has an active mode.
+func (o Output) Active() bool {
+	for _, mode := range o.Modes {
+		if mode.Active {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Outputs is a list of outputs.
 type Outputs []Output
 
@@ -599,4 +610,24 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 	}
 
 	return cmds, nil
+}
+
+// DisableOutputs returns a call to `xrandr` to switch off the specified outputs.
+func DisableOutputs(off Outputs) (*exec.Cmd, error) {
+	if len(off) == 0 {
+		return nil, nil
+	}
+
+	var outputs []string
+
+	V("disable outputs: %v\n", outputs)
+
+	command := "xrandr"
+	args := []string{}
+
+	for _, output := range off {
+		args = append(args, "--output", output.Name, "--off")
+	}
+
+	return exec.Command(command, args...), nil
 }

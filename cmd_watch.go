@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"runtime"
 	"time"
 
@@ -92,6 +94,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 	var eventReceived bool
 
 	var lastRule Rule
+	var lastOutputs Outputs
 	for {
 		if !disablePoll {
 			var outputs Outputs
@@ -106,6 +109,45 @@ func (cmd CmdWatch) Execute(args []string) error {
 
 			if err != nil {
 				return err
+			}
+
+			V("got outputs: %v", outputs)
+
+			// disable outputs which have a changed display
+			var off Outputs
+			for _, o := range outputs {
+				for _, last := range lastOutputs {
+					if o.Name != last.Name {
+						continue
+					}
+
+					if o.Active() != last.Active() {
+						V("  output %v: monitor active has changed, disabling", o.Name)
+						off = append(off, o)
+						continue
+					}
+
+					if o.MonitorId != last.MonitorId {
+						V("  output %v: monitor has changed, disabling", o.Name)
+						off = append(off, o)
+						continue
+					}
+				}
+			}
+
+			cmd, err := DisableOutputs(off)
+			if err != nil {
+				return err
+			}
+
+			if cmd != nil {
+				// forget the last rule set, something has changed for sure
+				lastRule = Rule{}
+
+				err = RunCommand(cmd)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "error disabling outputs: %v", err)
+				}
 			}
 
 			rule, err := MatchRules(globalOpts.cfg.Rules, outputs)
@@ -130,6 +172,8 @@ func (cmd CmdWatch) Execute(args []string) error {
 					backoffCh = time.After(time.Duration(globalOpts.Pause) * time.Second)
 				}
 			}
+
+			lastOutputs = outputs
 		}
 
 		select {
