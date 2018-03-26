@@ -97,6 +97,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 	var lastOutputs Outputs
 	for {
 		if !disablePoll {
+			V("--------------------- next iteration")
 			var outputs Outputs
 			var err error
 
@@ -112,6 +113,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 			}
 
 			V("got outputs: %v", outputs)
+			V("       last: %v", lastOutputs)
 
 			// disable outputs which have a changed display
 			var off Outputs
@@ -121,8 +123,8 @@ func (cmd CmdWatch) Execute(args []string) error {
 						continue
 					}
 
-					if o.Active() != last.Active() {
-						V("  output %v: monitor active has changed, disabling", o.Name)
+					if last.Active() && !o.Active() {
+						V("  output %v: monitor not active any more, disabling", o.Name)
 						off = append(off, o)
 						continue
 					}
@@ -135,12 +137,14 @@ func (cmd CmdWatch) Execute(args []string) error {
 				}
 			}
 
-			cmd, err := DisableOutputs(off)
-			if err != nil {
-				return err
-			}
+			if len(off) > 0 {
+				V("disable %d outputs", len(off))
 
-			if cmd != nil {
+				cmd, err := DisableOutputs(off)
+				if err != nil {
+					return err
+				}
+
 				// forget the last rule set, something has changed for sure
 				lastRule = Rule{}
 
@@ -148,6 +152,14 @@ func (cmd CmdWatch) Execute(args []string) error {
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "error disabling outputs: %v", err)
 				}
+
+				// refresh outputs again
+				outputs, err = GetOutputs()
+				if err != nil {
+					return err
+				}
+
+				V("new outputs after disable: %v", outputs)
 			}
 
 			rule, err := MatchRules(globalOpts.cfg.Rules, outputs)

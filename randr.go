@@ -618,16 +618,16 @@ func DisableOutputs(off Outputs) (*exec.Cmd, error) {
 		return nil, nil
 	}
 
-	var outputs []string
-
-	V("disable outputs: %v\n", outputs)
-
 	command := "xrandr"
 	args := []string{}
 
+	var outputs []string
 	for _, output := range off {
+		outputs = append(outputs, output.Name)
 		args = append(args, "--output", output.Name, "--off")
 	}
+
+	V("disable outputs: %v\n", outputs)
 
 	return exec.Command(command, args...), nil
 }
