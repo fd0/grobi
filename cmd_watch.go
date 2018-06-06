@@ -97,7 +97,6 @@ func (cmd CmdWatch) Execute(args []string) error {
 	var lastOutputs Outputs
 	for {
 		if !disablePoll {
-			V("--------------------- next iteration")
 			var outputs Outputs
 			var err error
 
@@ -111,9 +110,6 @@ func (cmd CmdWatch) Execute(args []string) error {
 			if err != nil {
 				return err
 			}
-
-			V("got outputs: %v", outputs)
-			V("       last: %v", lastOutputs)
 
 			// disable outputs which have a changed display
 			var off Outputs
