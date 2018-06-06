@@ -35,7 +35,8 @@ func openConfigFile(name string) (io.ReadCloser, error) {
 		name,
 		os.Getenv("GROBI_CONFIG"),
 		filepath.Join(xdgConfigDir(), "grobi.conf"),
-		filepath.Join(os.Getenv("HOME"), ".grobi.conf")} {
+		filepath.Join(os.Getenv("HOME"), ".grobi.conf"),
+		"/etc/xdg/grobi.conf"} {
 		if filename != "" {
 			if f, err := os.Open(filename); err == nil {
 				V("reading config from %v\n", filename)
