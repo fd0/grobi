@@ -6,7 +6,6 @@ import (
 )
 
 var version = "compiled manually"
-var compiledAt = "unknown time"
 
 type CmdVersion struct{}
 
