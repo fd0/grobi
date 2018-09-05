@@ -1,0 +1,9 @@
+# github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802
+github.com/BurntSushi/xgb
+github.com/BurntSushi/xgb/randr
+github.com/BurntSushi/xgb/xproto
+github.com/BurntSushi/xgb/render
+# github.com/jessevdk/go-flags v1.4.0
+github.com/jessevdk/go-flags
+# gopkg.in/yaml.v2 v2.2.1
+gopkg.in/yaml.v2
