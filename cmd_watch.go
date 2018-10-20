@@ -100,7 +100,7 @@ func (cmd CmdWatch) Execute(args []string) error {
 			var outputs Outputs
 			var err error
 
-			if eventReceived {
+			if eventReceived || globalOpts.ActivePoll {
 				outputs, err = DetectOutputs()
 				eventReceived = false
 			} else {

@@ -16,6 +16,7 @@ type GlobalOptions struct {
 	Config       string `short:"C" long:"config"                      description:"Read config from this file"`
 	DryRun       bool   `short:"n" long:"dry-run"                     description:"Only print what commands would be executed without actually runnig them"`
 	PollInterval uint   `short:"i" long:"interval"    default:"2"     description:"Number of seconds between polls, set to zero to disable polling"`
+	ActivePoll   bool   `short:"a" long:"active-poll"                 description:"Force xrandr to re-detect outputs during polling"`
 	Pause        uint   `short:"p" long:"pause"       default:"0"     description:"Number of seconds to pause after a change was executed"`
 	Logfile      string `short:"l" long:"logfile"                     description:"Write log to file"`
 
