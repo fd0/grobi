@@ -179,6 +179,12 @@ func (cmd CmdWatch) Execute(args []string) error {
 					disablePoll = true
 					backoffCh = time.After(time.Duration(globalOpts.Pause) * time.Second)
 				}
+
+				// refresh outputs for next cycle
+				outputs, err = GetOutputs()
+				if err != nil {
+					return err
+				}
 			}
 
 			lastOutputs = outputs
