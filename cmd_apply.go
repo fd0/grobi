@@ -21,7 +21,7 @@ func init() {
 }
 
 func (cmd CmdApply) Usage() string {
-	return "apply RULE"
+	return "RULE"
 }
 
 func ApplyRule(outputs Outputs, rule Rule) error {
