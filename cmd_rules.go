@@ -2,13 +2,13 @@ package main
 
 import "fmt"
 
-type CmdLayouts struct{}
+type CmdRules struct{}
 
 func init() {
-	_, err := parser.AddCommand("layouts",
-		"list layouts",
-		"The layouts command lists the configured layouts",
-		&CmdLayouts{})
+	_, err := parser.AddCommand("rules",
+		"list rules",
+		"The rules command lists the configured rules",
+		&CmdRules{})
 	if err != nil {
 		panic(err)
 	}
@@ -26,7 +26,7 @@ func printOne(label string, arg string) {
 	}
 }
 
-func (cmd CmdLayouts) Execute(args []string) error {
+func (cmd CmdRules) Execute(args []string) error {
 	globalOpts.ReadConfigfile()
 
 	for _, rule := range globalOpts.cfg.Rules {
