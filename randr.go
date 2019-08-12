@@ -553,6 +553,11 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 
 	disableOutputArgs := [][]string{}
 
+	sameAsNames := make(map[string]struct{})
+	for _, name := range rule.OutputsSameAs {
+		sameAsNames[name.As] = struct{}{}
+	}
+
 	// honour disable_order if present
 	for _, name := range rule.DisableOrder {
 		if _, ok := disableOutputs[name]; ok {
@@ -565,8 +570,18 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 
 	// collect remaining outputs to be disabled
 	for name := range disableOutputs {
+		// If setup as 'sameas' we should not disable it
+		if _, ok := sameAsNames[name]; ok {
+			continue
+		}
 		args := []string{"--output", name, "--off"}
 		disableOutputArgs = append(disableOutputArgs, args)
+	}
+
+	sameAsOutputArgs := [][]string{}
+	for _, name := range rule.OutputsSameAs {
+		args := []string{"--output", name.Output, "--auto", "--same-as", name.As, "--output", name.As, "--auto"}
+		sameAsOutputArgs = append(sameAsOutputArgs, args)
 	}
 
 	// enable/disable all monitors in one call to xrandr
@@ -578,6 +593,9 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		}
 		for _, enableArgs := range enableOutputArgs {
 			args = append(args, enableArgs...)
+		}
+		for _, sameArgs := range sameAsOutputArgs {
+			args = append(args, sameArgs...)
 		}
 		cmd := exec.Command(command, args...)
 		return []*exec.Cmd{cmd}, nil
@@ -607,6 +625,11 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		}
 
 		cmds = append(cmds, exec.Command(command, args...))
+	}
+
+	// Same as should be added last
+	if len(sameAsOutputArgs) > 0 {
+		cmds = append(cmds, exec.Command(command, sameAsOutputArgs[0]...))
 	}
 
 	return cmds, nil

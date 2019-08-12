@@ -1,5 +1,11 @@
 package main
 
+// SameAs
+type SameAs struct {
+	Output string `yaml:"output"`
+	As     string `yaml:"same_as"`
+}
+
 // Rule is a rule to configure outputs.
 type Rule struct {
 	Name string
@@ -8,6 +14,7 @@ type Rule struct {
 	OutputsDisconnected []string `yaml:"outputs_disconnected"`
 	OutputsPresent      []string `yaml:"outputs_present"`
 	OutputsAbsent       []string `yaml:"outputs_absent"`
+	OutputsSameAs       []SameAs `yaml:"outputs_same_as"`
 
 	ConfigureRow     []string `yaml:"configure_row"`
 	ConfigureSingle  string   `yaml:"configure_single"`
@@ -24,6 +31,7 @@ type Rule struct {
 
 // Match returns true iff the rule matches for the given list of outputs.
 func (r Rule) Match(outputs Outputs) bool {
+
 	for _, name := range r.OutputsAbsent {
 		if outputs.Present(name) {
 			return false
