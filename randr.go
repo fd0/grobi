@@ -101,6 +101,15 @@ func (os Outputs) Present(name string) bool {
 			return true
 		}
 
+		// Check monitory id only
+		m, err = path.Match(name, o.MonitorId)
+		if err != nil {
+			return false
+		}
+		if m {
+			return true
+		}
+
 		// Check extended name
 		m, err = path.Match(name, o.Name+"-"+o.MonitorId)
 		if err != nil {
@@ -123,6 +132,15 @@ func (os Outputs) Connected(name string) bool {
 
 		// Check legacy name
 		m, err := path.Match(name, o.Name)
+		if err != nil {
+			return false
+		}
+		if m {
+			return true
+		}
+
+		// Check monitory id only
+		m, err = path.Match(name, o.MonitorId)
 		if err != nil {
 			return false
 		}
@@ -515,6 +533,14 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		mode := ""
 		if len(data) > 1 {
 			mode = data[1]
+		}
+
+		for _, disp := range current {
+			if disp.MonitorId == name {
+				V("set output %s to %s\n", disp.MonitorId, disp.Name)
+				name = disp.Name
+				break
+			}
 		}
 
 		active[name] = struct{}{}
