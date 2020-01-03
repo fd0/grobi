@@ -5,7 +5,7 @@ import (
 	"runtime"
 )
 
-var version = "compiled manually"
+var version = "0.5.1-dev"
 
 type CmdVersion struct{}
 

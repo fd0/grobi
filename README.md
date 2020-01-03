@@ -8,11 +8,11 @@ outputs via RANDR according to configurable profiles.
 
 # Installation
 
-Grobi requires Go version 1.3 or newer to compile. To build grobi, run the
+Grobi requires Go version 1.11 or newer to compile. To build grobi, run the
 following command:
 
 ```shell
-$ go run build.go
+$ go build
 ```
 
 Afterwards please find a binary of grobi in the current directory:
