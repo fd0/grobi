@@ -83,3 +83,12 @@ Grobi follows [Semantic Versioning](http://semver.org) to clearly define which
 versions are compatible. The configuration file and command-line parameters and
 user-interface are considered the "Public API" in the sense of Semantic
 Versioning.
+
+# Development
+
+## Release New Version
+
+Rough steps for releasing a new version:
+ * Update version number in `cmd_version.go`, remove the `-dev` suffix
+ * Commit and tag version
+ * Add `-dev` suffix to version in `cmd_version.go`
