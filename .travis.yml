@@ -11,9 +11,8 @@ install:
   - go get golang.org/x/tools/cmd/goimports
 
 script:
-  - GO111MODULE=on go build -mod=vendor
-  - GO111MODULE=on go test ./...
-  - GO111MODULE=on go run -mod=vendor build.go -v -T
+  - go build
+  - go test ./...
   - diff <(goimports -d *.go) <(printf "")
 
 after_success:
