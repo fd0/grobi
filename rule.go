@@ -11,6 +11,7 @@ type Rule struct {
 
 	ConfigureRow     []string `yaml:"configure_row"`
 	ConfigureSingle  string   `yaml:"configure_single"`
+	ConfigureMirror  []string `yaml:"configure_mirror"`
 	ConfigureCommand string   `yaml:"configure_command"`
 
 	Primary string `yaml:"primary"`

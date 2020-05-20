@@ -498,6 +498,8 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		outputs = []string{rule.ConfigureSingle}
 	case len(rule.ConfigureRow) > 0:
 		outputs = rule.ConfigureRow
+	case len(rule.ConfigureMirror) == 1:
+		return nil, errors.New("mirror must have 2 or more displays")
 	default:
 		return nil, errors.New("empty monitor row configuration")
 	}
@@ -506,6 +508,11 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 
 	command := "xrandr"
 	enableOutputArgs := [][]string{}
+
+	mirrornames := make(map[string]struct{})
+	for _, name := range rule.ConfigureMirror {
+		mirrornames[name] = struct{}{}
+	}
 
 	active := make(map[string]struct{})
 	var lastOutput = ""
@@ -552,10 +559,13 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 	}
 
 	disableOutputArgs := [][]string{}
-
 	// honour disable_order if present
 	for _, name := range rule.DisableOrder {
 		if _, ok := disableOutputs[name]; ok {
+			// Do not disable a mirrored output
+			if _, mirrored := mirrornames[name]; mirrored {
+				continue
+			}
 			args := []string{"--output", name, "--off"}
 			disableOutputArgs = append(disableOutputArgs, args)
 
@@ -565,8 +575,22 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 
 	// collect remaining outputs to be disabled
 	for name := range disableOutputs {
+		// Do not disable a mirrored output
+		if _, mirrored := mirrornames[name]; mirrored {
+			continue
+		}
 		args := []string{"--output", name, "--off"}
 		disableOutputArgs = append(disableOutputArgs, args)
+	}
+
+	mirrorOutputArgs := [][]string{}
+	if len(rule.ConfigureMirror) > 1 {
+		m := rule.ConfigureMirror[0]
+		for _, name := range rule.ConfigureMirror[1:] {
+			mirrorOutputArgs = append(mirrorOutputArgs,
+				[]string{"--output", name, "--auto", "--same-as", m},
+			)
+		}
 	}
 
 	// enable/disable all monitors in one call to xrandr
@@ -578,6 +602,9 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		}
 		for _, enableArgs := range enableOutputArgs {
 			args = append(args, enableArgs...)
+		}
+		for _, mirrorArgs := range mirrorOutputArgs {
+			args = append(args, mirrorArgs...)
 		}
 		cmd := exec.Command(command, args...)
 		return []*exec.Cmd{cmd}, nil
@@ -606,6 +633,12 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 			enableOutputArgs = enableOutputArgs[1:]
 		}
 
+		cmds = append(cmds, exec.Command(command, args...))
+	}
+
+	if len(mirrorOutputArgs) > 0 {
+		args := []string{}
+		args = append(args, mirrorOutputArgs[0]...)
 		cmds = append(cmds, exec.Command(command, args...))
 	}
 
