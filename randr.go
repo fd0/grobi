@@ -528,7 +528,11 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		}
 
 		if i > 0 {
-			args = append(args, "--right-of", lastOutput)
+			if rule.VerticalRow {
+				args = append(args, "--above", lastOutput)
+			} else {
+				args = append(args, "--right-of", lastOutput)
+			}
 		}
 
 		if rule.Primary == name {
