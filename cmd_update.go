@@ -22,8 +22,14 @@ func MatchRules(rules []Rule, outputs Outputs) (Rule, error) {
 	return Rule{}, nil
 }
 
-func (cmd CmdUpdate) Execute(args []string) error {
-	globalOpts.ReadConfigfile()
+func (cmd CmdUpdate) Execute(args []string) (err error) {
+	err = globalOpts.ReadConfigfile()
+	if err != nil {
+		return err
+	}
+
+	// install panic handler if commands are given
+	defer RunCommandsOnFailure(&err, globalOpts.cfg.OnFailure)()
 
 	outputs, err := DetectOutputs()
 	if err != nil {

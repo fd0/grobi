@@ -17,6 +17,7 @@ type Config struct {
 	Rules []Rule
 
 	ExecuteAfter []string `yaml:"execute_after"`
+	OnFailure    []string `yaml:"on_failure"`
 }
 
 // xdgConfigDir returns the config directory according to the xdg standard, see

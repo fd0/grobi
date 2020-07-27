@@ -57,8 +57,14 @@ func ApplyRule(outputs Outputs, rule Rule) error {
 	return nil
 }
 
-func (cmd CmdApply) Execute(args []string) error {
-	globalOpts.ReadConfigfile()
+func (cmd CmdApply) Execute(args []string) (err error) {
+	err = globalOpts.ReadConfigfile()
+	if err != nil {
+		return err
+	}
+
+	// install panic handler if commands are given
+	defer RunCommandsOnFailure(&err, globalOpts.cfg.OnFailure)()
 
 	if len(args) != 1 {
 		return errors.New("need exactly one rule name as the parameter")

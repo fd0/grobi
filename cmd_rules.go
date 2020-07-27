@@ -27,7 +27,10 @@ func printOne(label string, arg string) {
 }
 
 func (cmd CmdRules) Execute(args []string) error {
-	globalOpts.ReadConfigfile()
+	err := globalOpts.ReadConfigfile()
+	if err != nil {
+		return err
+	}
 
 	for _, rule := range globalOpts.cfg.Rules {
 		fmt.Printf("%v\n", rule.Name)

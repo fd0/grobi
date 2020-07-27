@@ -72,8 +72,14 @@ func subscribeXEvents(ch chan<- Event, done <-chan struct{}) {
 	}
 }
 
-func (cmd CmdWatch) Execute(args []string) error {
-	globalOpts.ReadConfigfile()
+func (cmd CmdWatch) Execute(args []string) (err error) {
+	err = globalOpts.ReadConfigfile()
+	if err != nil {
+		return err
+	}
+
+	// install panic handler if commands are given
+	defer RunCommandsOnFailure(&err, globalOpts.cfg.OnFailure)()
 
 	done := make(chan struct{})
 	defer close(done)

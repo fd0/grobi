@@ -25,18 +25,18 @@ type GlobalOptions struct {
 	logfile *log.Logger
 }
 
-func (gopts *GlobalOptions) ReadConfigfile() {
+func (gopts *GlobalOptions) ReadConfigfile() error {
 	if gopts.cfg != nil {
-		return
+		return nil
 	}
 
 	cfg, err := readConfig(gopts.Config)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error reading config file: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error reading config file: %v\n", err)
 	}
 
 	gopts.cfg = &cfg
+	return nil
 }
 
 // RunCommand runs the given command or prints the arguments to stdout if
