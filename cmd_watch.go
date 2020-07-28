@@ -75,7 +75,7 @@ func subscribeXEvents(ch chan<- Event, done <-chan struct{}) {
 func (cmd CmdWatch) Execute(args []string) (err error) {
 	err = globalOpts.ReadConfigfile()
 	if err != nil {
-		return err
+		return fmt.Errorf("reading config file failed: %w", err)
 	}
 
 	// install panic handler if commands are given
@@ -114,7 +114,7 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 			}
 
 			if err != nil {
-				return err
+				return fmt.Errorf("detecting outputs: %w", err)
 			}
 
 			// disable outputs which have a changed display
@@ -144,7 +144,7 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 
 				cmd, err := DisableOutputs(off)
 				if err != nil {
-					return err
+					return fmt.Errorf("disabling outputs: %w", err)
 				}
 
 				// forget the last rule set, something has changed for sure
@@ -152,13 +152,13 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 
 				err = RunCommand(cmd)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "error disabling outputs: %v", err)
+					fmt.Fprintf(os.Stderr, "error disabling: %v", err)
 				}
 
 				// refresh outputs again
 				outputs, err = GetOutputs()
 				if err != nil {
-					return err
+					return fmt.Errorf("detecting outputs after disabling: %w", err)
 				}
 
 				V("new outputs after disable: %v", outputs)
@@ -166,7 +166,7 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 
 			rule, err := MatchRules(globalOpts.cfg.Rules, outputs)
 			if err != nil {
-				return err
+				return fmt.Errorf("matching rules: %w", err)
 			}
 
 			if rule.Name != lastRule.Name {
@@ -175,7 +175,7 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 
 				err = ApplyRule(outputs, rule)
 				if err != nil {
-					return err
+					return fmt.Errorf("applying rules: %w", err)
 				}
 
 				lastRule = rule
@@ -189,7 +189,7 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 				// refresh outputs for next cycle
 				outputs, err = GetOutputs()
 				if err != nil {
-					return err
+					return fmt.Errorf("refreshing outputs: %w", err)
 				}
 			}
 
@@ -200,7 +200,7 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 		case ev := <-ch:
 			V("new RANDR change event received\n")
 			if ev.Error != nil {
-				return ev.Error
+				return fmt.Errorf("RANDR change event contains error: %w", ev.Error)
 			}
 
 			eventReceived = true
