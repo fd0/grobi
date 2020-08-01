@@ -29,7 +29,7 @@ func ApplyRule(outputs Outputs, rule Rule) error {
 	var err error
 
 	switch {
-	case rule.ConfigureSingle != "" || len(rule.ConfigureRow) > 0:
+	case rule.ConfigureSingle != "" || len(rule.ConfigureRow) > 0 || len(rule.ConfigureColumn) > 0:
 		cmds, err = BuildCommandOutputRow(rule, outputs)
 	case rule.ConfigureCommand != "":
 		cmds = []*exec.Cmd{exec.Command("sh", "-c", rule.ConfigureCommand)}

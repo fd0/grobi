@@ -10,6 +10,7 @@ type Rule struct {
 	OutputsAbsent       []string `yaml:"outputs_absent"`
 
 	ConfigureRow     []string `yaml:"configure_row"`
+	ConfigureColumn  []string `yaml:"configure_column"`
 	ConfigureSingle  string   `yaml:"configure_single"`
 	ConfigureCommand string   `yaml:"configure_command"`
 

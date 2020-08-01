@@ -492,12 +492,17 @@ func DetectOutputs() (Outputs, error) {
 // desired mode, e.g. LVDS1@1377x768.
 func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 	var outputs []string
+	var row bool
 
 	switch {
 	case rule.ConfigureSingle != "":
 		outputs = []string{rule.ConfigureSingle}
 	case len(rule.ConfigureRow) > 0:
 		outputs = rule.ConfigureRow
+		row = true
+	case len(rule.ConfigureColumn) > 0:
+		outputs = rule.ConfigureColumn
+		row = false
 	default:
 		return nil, errors.New("empty monitor row configuration")
 	}
@@ -528,7 +533,11 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		}
 
 		if i > 0 {
-			args = append(args, "--right-of", lastOutput)
+			if row {
+				args = append(args, "--right-of", lastOutput)
+			} else {
+				args = append(args, "--below", lastOutput)
+			}
 		}
 
 		if rule.Primary == name {
