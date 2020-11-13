@@ -221,7 +221,7 @@ func GenerateMonitorId(s string) (string, error) {
 	mask := uint16(0x7C00) // 0b0111110000000000
 	for i := uint(0); i <= 10; i += 5 {
 		number := ((manuf & (mask >> i)) >> (10 - i))
-		manufacturer += string(number + 'A' - 1)
+		manufacturer += string(byte(number + 'A' - 1))
 	}
 
 	// Decode the product and serial number
