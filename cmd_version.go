@@ -5,7 +5,7 @@ import (
 	"runtime"
 )
 
-var version = "0.5.2-dev"
+var version = "dev"
 
 type CmdVersion struct{}
 
