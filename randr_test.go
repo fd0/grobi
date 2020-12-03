@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -414,7 +415,8 @@ VIRTUAL1 disconnected (normal left inverted right x axis y axis)`,
 			{Name: "DP1"},
 			{Name: "DP2"},
 			{Name: "HDMI1"},
-			{Name: "HDMI2",
+			{
+				Name: "HDMI2",
 				Modes: []Mode{
 					{Name: "1920x1080", Default: true, Active: true},
 					{Name: "1680x1050"},
@@ -542,20 +544,23 @@ func TestParseOutputLine(t *testing.T) {
 }
 
 var TestModeLines = []struct {
-	line string
-	mode Mode
+	line          string
+	mode          Mode
+	expectedError error
 }{
 	{
 		"  1152x864      75.00",
 		Mode{
 			Name: "1152x864",
 		},
+		nil,
 	},
 	{
 		"  1024x768      75.08    70.07    60.00",
 		Mode{
 			Name: "1024x768",
 		},
+		nil,
 	},
 	{
 		"  1600x1200     60.00*+",
@@ -564,6 +569,7 @@ var TestModeLines = []struct {
 			Active:  true,
 			Default: true,
 		},
+		nil,
 	},
 	{
 		"  1366x768      60.10 +",
@@ -571,12 +577,28 @@ var TestModeLines = []struct {
 			Name:    "1366x768",
 			Default: true,
 		},
+		nil,
 	},
 	{
 		"  832x624       74.55",
 		Mode{
 			Name: "832x624",
 		},
+		nil,
+	},
+	{
+		"   2560x1440    143.86 + 119.88    59.95*",
+		Mode{
+			Name:    "2560x1440",
+			Active:  true,
+			Default: true,
+		},
+		nil,
+	},
+	{
+		"   2560x1440",
+		Mode{},
+		fmt.Errorf("line too short, no refresh rate found:    2560x1440"),
 	},
 }
 
@@ -584,19 +606,21 @@ func TestParseModeLine(t *testing.T) {
 	for i, test := range TestModeLines {
 		mode, err := parseModeLine(test.line)
 		if err != nil {
-			t.Errorf("test %d returned error: %v", i, err)
-			continue
+			if err.Error() != test.expectedError.Error() {
+				t.Errorf("test %d returned unexpected error: %v", i, err)
+				continue
+			}
 		}
 
 		if !reflect.DeepEqual(mode, test.mode) {
-			t.Errorf("test %d failed: expected Mode not found", i)
+			t.Errorf("test %d failed: expected %#v but got %#v", i, test.mode, mode)
 			continue
 		}
 	}
 }
 
 func TestGenerateMonitorId(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		edid      string
 		failure   bool
 		monitorID string

@@ -20,7 +20,7 @@ type Config struct {
 	OnFailure    []string `yaml:"on_failure"`
 }
 
-// xdgConfigDir returns the config directory according to the xdg standard, see
+// xdgConfigDir returns the config directory according to the xdg standard, see.
 // http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html.
 func xdgConfigDir() string {
 	if dir := os.Getenv("XDG_CONFIG_HOME"); dir != "" {
@@ -37,7 +37,8 @@ func openConfigFile(name string) (io.ReadCloser, error) {
 		os.Getenv("GROBI_CONFIG"),
 		filepath.Join(xdgConfigDir(), "grobi.conf"),
 		filepath.Join(os.Getenv("HOME"), ".grobi.conf"),
-		"/etc/xdg/grobi.conf"} {
+		"/etc/xdg/grobi.conf",
+	} {
 		if filename != "" {
 			if f, err := os.Open(filename); err == nil {
 				V("reading config from %v\n", filename)
@@ -81,7 +82,6 @@ func readConfig(name string) (Config, error) {
 
 // Valid returns an error if the config is invalid, ie a pattern is malformed.
 func (cfg Config) Valid() error {
-
 	for _, rule := range cfg.Rules {
 		for _, list := range [][]string{rule.OutputsPresent, rule.OutputsAbsent, rule.OutputsConnected, rule.OutputsDisconnected} {
 			for _, pat := range list {
