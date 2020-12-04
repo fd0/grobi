@@ -26,14 +26,14 @@ func (cmd CmdApply) Usage() string {
 }
 
 func ApplyRule(outputs Outputs, rule Rule) error {
-	var cmds []*exec.Cmd
+	var cmds commands
 	var err error
 
 	switch {
 	case rule.ConfigureSingle != "" || len(rule.ConfigureRow) > 0 || len(rule.ConfigureColumn) > 0:
 		cmds, err = BuildCommandOutputRow(rule, outputs)
 	case rule.ConfigureCommand != "":
-		cmds = []*exec.Cmd{exec.Command("sh", "-c", rule.ConfigureCommand)}
+		cmds = commands{command{"sh", "-c", rule.ConfigureCommand}}
 	default:
 		return fmt.Errorf("no output configuration for rule %v", rule.Name)
 	}
@@ -45,7 +45,7 @@ func ApplyRule(outputs Outputs, rule Rule) error {
 	foundError := false
 	for _, cmd := range cmds {
 		for i := 0; i < 4; i++ {
-			err = RunCommand(cmd)
+			err = RunCommand(cmd.Cmd())
 			if err == nil {
 				break
 			}

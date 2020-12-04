@@ -492,11 +492,25 @@ func DetectOutputs() (Outputs, error) {
 	return RandrParse(bytes.NewReader(output))
 }
 
+type (
+	commands []command
+	command  []string
+)
+
+func (c command) Cmd() *exec.Cmd {
+	return exec.Command(c[0], c[1:]...) // #nosec
+}
+
+func newCommand(cmd string, args ...string) command {
+	c := command{cmd}
+	return append(c, args...)
+}
+
 // BuildCommandOutputRow return a sequence of calls to `xrandr` to configure
 // all named outputs in a row, left to right, given the currently active
 // Outputs and a list of output names, optionally followed by "@" and the
 // desired mode, e.g. LVDS1@1377x768.
-func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
+func BuildCommandOutputRow(rule Rule, current Outputs) (commands, error) {
 	var outputs []string
 	var row bool
 
@@ -602,18 +616,17 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		for _, enableArgs := range enableOutputArgs {
 			args = append(args, enableArgs...)
 		}
-		cmd := exec.Command(command, args...)
-		return []*exec.Cmd{cmd}, nil
+		return commands{newCommand(command, args...)}, nil
 	}
 
 	V("splitting the configuration into several calls to xrandr\n")
 
 	// otherwise return several calls to xrandr
-	cmds := []*exec.Cmd{}
+	cmds := commands{}
 
 	// disable an output
 	if len(disableOutputArgs) > 0 {
-		cmds = append(cmds, exec.Command(command, disableOutputArgs[0]...))
+		cmds = append(cmds, newCommand(command, disableOutputArgs[0]...))
 		disableOutputArgs = disableOutputArgs[1:]
 	}
 
@@ -629,7 +642,7 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 			enableOutputArgs = enableOutputArgs[1:]
 		}
 
-		cmds = append(cmds, exec.Command(command, args...))
+		cmds = append(cmds, newCommand(command, args...))
 	}
 
 	return cmds, nil

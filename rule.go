@@ -26,14 +26,20 @@ type Rule struct {
 }
 
 func (r Rule) OutputsDiff(old Rule) Outputs {
-	outputs := []string{r.ConfigureSingle}
+	outputs := []string{}
+	if r.ConfigureSingle != "" {
+		outputs = append(outputs, r.ConfigureSingle)
+	}
 	outputs = append(outputs, r.ConfigureRow...)
 	outputs = append(outputs, r.ConfigureColumn...)
 	for k, v := range outputs {
 		outputs[k] = strings.SplitN(v, "@", 2)[0]
 	}
 
-	outputsOld := []string{old.ConfigureSingle}
+	outputsOld := []string{}
+	if old.ConfigureSingle != "" {
+		outputsOld = append(outputsOld, old.ConfigureSingle)
+	}
 	outputsOld = append(outputsOld, old.ConfigureRow...)
 	outputsOld = append(outputsOld, old.ConfigureColumn...)
 	for k, v := range outputsOld {
