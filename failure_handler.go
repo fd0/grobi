@@ -18,10 +18,10 @@ func RunCommandsOnFailure(err *error, commands []string) func() {
 			return
 		}
 
-		fmt.Fprintf(os.Stderr, "encountered error: %v", *err)
+		fmt.Fprintf(os.Stderr, "encountered error: %v\n", *err)
 
 		for _, cmd := range commands {
-			fmt.Fprintf(os.Stderr, "running on_failure command: %v", cmd)
+			fmt.Fprintf(os.Stderr, "running on_failure command: %v\n", cmd)
 			err := RunCommand(exec.Command("sh", "-c", cmd))
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "command failed: %v\n", err)

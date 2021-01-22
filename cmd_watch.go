@@ -152,7 +152,7 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 
 				err = RunCommand(cmd)
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "error disabling: %v", err)
+					fmt.Fprintf(os.Stderr, "error disabling: %v\n", err)
 				}
 
 				// refresh outputs again
