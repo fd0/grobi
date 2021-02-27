@@ -32,7 +32,7 @@ func (gopts *GlobalOptions) ReadConfigfile() error {
 
 	cfg, err := readConfig(gopts.Config)
 	if err != nil {
-		return fmt.Errorf("error reading config file: %v\n", err)
+		return fmt.Errorf("error reading config file: %v", err)
 	}
 
 	gopts.cfg = &cfg

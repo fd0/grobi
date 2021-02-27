@@ -20,7 +20,7 @@ type Output struct {
 	Modes     Modes
 	Connected bool
 	Primary   bool
-	MonitorId string
+	MonitorID string
 }
 
 func (o Output) String() string {
@@ -43,8 +43,8 @@ func (o Output) String() string {
 		}
 	}
 
-	if o.MonitorId != "" {
-		str += fmt.Sprintf(" [%v]", o.MonitorId)
+	if o.MonitorID != "" {
+		str += fmt.Sprintf(" [%v]", o.MonitorID)
 	}
 	return str
 }
@@ -68,11 +68,7 @@ func (o Output) Equals(other Output) bool {
 		}
 	}
 
-	if o.MonitorId != other.MonitorId {
-		return false
-	}
-
-	return true
+	return o.MonitorID == other.MonitorID
 }
 
 // Active returns true if an output has an active mode.
@@ -102,7 +98,7 @@ func (os Outputs) Present(name string) bool {
 		}
 
 		// Check extended name
-		m, err = path.Match(name, o.Name+"-"+o.MonitorId)
+		m, err = path.Match(name, o.Name+"-"+o.MonitorID)
 		if err != nil {
 			return false
 		}
@@ -131,7 +127,7 @@ func (os Outputs) Connected(name string) bool {
 		}
 
 		// Check extended name
-		m, err = path.Match(name, o.Name+"-"+o.MonitorId)
+		m, err = path.Match(name, o.Name+"-"+o.MonitorID)
 		if err != nil {
 			return false
 		}
@@ -192,8 +188,8 @@ func (m Modes) String() string {
 	return strings.Join(str, " ")
 }
 
-// Generates the monitor id from the edid
-func GenerateMonitorId(s string) (string, error) {
+// GenerateMonitorID derives the monitor id from the edid
+func GenerateMonitorID(s string) (string, error) {
 	var errEdidCorrupted = errors.New("corrupt EDID: " + s)
 	if len(s) < 32 || s[:16] != "00ffffffffffff00" {
 		return "", errEdidCorrupted
@@ -414,20 +410,20 @@ nextLine:
 				continue nextLine
 
 			case StateEdid:
-				edid_part, err := parseEdidLine(line)
+				edidPart, err := parseEdidLine(line)
 				if err == errNotEdidLine {
-					monitorId, err := GenerateMonitorId(currentEdid)
+					monitorID, err := GenerateMonitorID(currentEdid)
 					if err != nil {
 						return nil, err
 					}
-					output.MonitorId = monitorId
+					output.MonitorID = monitorID
 					state = StateAdditionalProperties
 					continue
 				}
 				if err != nil {
 					return nil, err
 				}
-				currentEdid += edid_part
+				currentEdid += edidPart
 				continue nextLine
 
 			case StateMode:

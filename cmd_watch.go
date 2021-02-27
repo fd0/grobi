@@ -131,7 +131,7 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 						continue
 					}
 
-					if o.Active() && o.MonitorId != last.MonitorId {
+					if o.Active() && o.MonitorID != last.MonitorID {
 						V("  output %v: monitor has changed, disabling", o.Name)
 						off = append(off, o)
 						continue

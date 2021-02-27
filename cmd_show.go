@@ -15,7 +15,7 @@ func init() {
 }
 
 func ListOutput(output Output) {
-	fmt.Printf("%- 10s %s\n", output.Name, output.MonitorId)
+	fmt.Printf("%- 10s %s\n", output.Name, output.MonitorID)
 }
 
 func (cmd CmdShow) Execute(args []string) error {

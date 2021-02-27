@@ -81,7 +81,7 @@ var testOutputs = []Output{
 			{"1377x768", true, true},
 			{"1024x768", false, false},
 		},
-		MonitorId: "CMN-5297-0",
+		MonitorID: "CMN-5297-0",
 	},
 	{
 		Name:      "VGA",
@@ -98,7 +98,7 @@ var testOutputs = []Output{
 			{"1920x1080", true, true},
 			{"1024x768", false, false},
 		},
-		MonitorId: "SAM-2618-808661557",
+		MonitorID: "SAM-2618-808661557",
 	},
 	{
 		Name: "DP2-1",
