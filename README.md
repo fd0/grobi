@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/fd0/grobi.svg?branch=master)](https://travis-ci.org/fd0/grobi)
+[![Build Status](https://github.com/fd0/grobi/workflows/test/badge.svg)](https://github.com/fd0/grobi/actions?query=workflow%3Atest)
 
 # grobi
 
