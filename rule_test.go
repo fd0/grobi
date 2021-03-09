@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 var testRules = []struct {
 	rule  Rule
@@ -112,5 +114,21 @@ func TestRuleMatch(t *testing.T) {
 			t.Errorf("test rule %d wrong match: wanted %v, got %v", i, test.match, m)
 			continue
 		}
+	}
+}
+
+func TestOutputsDiff(t *testing.T) {
+	old := Rule{
+		ConfigureRow:    []string{"one"},
+		ConfigureColumn: []string{"two"},
+	}
+	new := Rule{
+		ConfigureRow:    []string{"one"},
+		ConfigureColumn: []string{"three"},
+	}
+
+	diff := new.OutputsDiff(old)
+	if diff[0].Name != "two" {
+		t.Errorf("expected diff to be two got: %s", diff[0].Name)
 	}
 }

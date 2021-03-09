@@ -190,7 +190,7 @@ func (m Modes) String() string {
 
 // GenerateMonitorID derives the monitor id from the edid
 func GenerateMonitorID(s string) (string, error) {
-	var errEdidCorrupted = errors.New("corrupt EDID: " + s)
+	errEdidCorrupted := errors.New("corrupt EDID: " + s)
 	if len(s) < 32 || s[:16] != "00ffffffffffff00" {
 		return "", errEdidCorrupted
 	}
@@ -314,22 +314,32 @@ func parseModeLine(line string) (mode Mode, err error) {
 	}
 	mode.Name = ws.Text()
 
-	if !ws.Scan() {
+	i := 0
+	for ws.Scan() {
+		i++
+		rate := ws.Text()
+		if len(rate) == 0 {
+			break
+		}
+		if rate[len(rate)-1] == '+' {
+			mode.Default = true
+		}
+
+		if len(rate) > 1 && rate[len(rate)-2] == '*' {
+			mode.Active = true
+		}
+
+		if rate[len(rate)-1] == '*' {
+			mode.Active = true
+		}
+
+		// handle single-word "+", which happens when a mode is default but not active
+		if ws.Text() == "+" {
+			mode.Default = true
+		}
+	}
+	if i == 0 {
 		return Mode{}, fmt.Errorf("line too short, no refresh rate found: %s", line)
-	}
-	rate := ws.Text()
-
-	if rate[len(rate)-1] == '+' {
-		mode.Default = true
-	}
-
-	if rate[len(rate)-2] == '*' {
-		mode.Active = true
-	}
-
-	// handle single-word "+", which happens when a mode is default but not active
-	if ws.Scan() && ws.Text() == "+" {
-		mode.Default = true
 	}
 
 	return mode, nil
@@ -337,7 +347,7 @@ func parseModeLine(line string) (mode Mode, err error) {
 
 var errNotEdidLine = errors.New("not an edid line")
 
-// parseEdidLine returns the partial EDID on that line
+// parseEdidLine returns the partial EDID on that line.
 func parseEdidLine(line string) (edid string, err error) {
 	if !strings.HasPrefix(line, "		") {
 		return "", errNotEdidLine
@@ -482,11 +492,25 @@ func DetectOutputs() (Outputs, error) {
 	return RandrParse(bytes.NewReader(output))
 }
 
+type (
+	commands []command
+	command  []string
+)
+
+func (c command) Cmd() *exec.Cmd {
+	return exec.Command(c[0], c[1:]...) // #nosec
+}
+
+func newCommand(cmd string, args ...string) command {
+	c := command{cmd}
+	return append(c, args...)
+}
+
 // BuildCommandOutputRow return a sequence of calls to `xrandr` to configure
 // all named outputs in a row, left to right, given the currently active
 // Outputs and a list of output names, optionally followed by "@" and the
 // desired mode, e.g. LVDS1@1377x768.
-func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
+func BuildCommandOutputRow(rule Rule, current Outputs) (commands, error) {
 	var outputs []string
 	var row bool
 
@@ -509,13 +533,17 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 	enableOutputArgs := [][]string{}
 
 	active := make(map[string]struct{})
-	var lastOutput = ""
+	lastOutput := ""
 	for i, output := range outputs {
-		data := strings.SplitN(output, "@", 2)
+		data := strings.SplitN(output, "@", 3)
 		name := data[0]
 		mode := ""
+		rate := ""
 		if len(data) > 1 {
 			mode = data[1]
+		}
+		if len(data) > 2 {
+			rate = data[2]
 		}
 
 		active[name] = struct{}{}
@@ -526,6 +554,10 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 			args = append(args, "--auto")
 		} else {
 			args = append(args, "--mode", mode)
+		}
+
+		if rate != "" {
+			args = append(args, "--rate", rate)
 		}
 
 		if i > 0 {
@@ -584,18 +616,17 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 		for _, enableArgs := range enableOutputArgs {
 			args = append(args, enableArgs...)
 		}
-		cmd := exec.Command(command, args...)
-		return []*exec.Cmd{cmd}, nil
+		return commands{newCommand(command, args...)}, nil
 	}
 
 	V("splitting the configuration into several calls to xrandr\n")
 
 	// otherwise return several calls to xrandr
-	cmds := []*exec.Cmd{}
+	cmds := commands{}
 
 	// disable an output
 	if len(disableOutputArgs) > 0 {
-		cmds = append(cmds, exec.Command(command, disableOutputArgs[0]...))
+		cmds = append(cmds, newCommand(command, disableOutputArgs[0]...))
 		disableOutputArgs = disableOutputArgs[1:]
 	}
 
@@ -611,16 +642,16 @@ func BuildCommandOutputRow(rule Rule, current Outputs) ([]*exec.Cmd, error) {
 			enableOutputArgs = enableOutputArgs[1:]
 		}
 
-		cmds = append(cmds, exec.Command(command, args...))
+		cmds = append(cmds, newCommand(command, args...))
 	}
 
 	return cmds, nil
 }
 
 // DisableOutputs returns a call to `xrandr` to switch off the specified outputs.
-func DisableOutputs(off Outputs) (*exec.Cmd, error) {
+func DisableOutputs(off Outputs) *exec.Cmd {
 	if len(off) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	command := "xrandr"
@@ -634,5 +665,5 @@ func DisableOutputs(off Outputs) (*exec.Cmd, error) {
 
 	V("disable outputs: %v\n", outputs)
 
-	return exec.Command(command, args...), nil
+	return exec.Command(command, args...)
 }
