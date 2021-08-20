@@ -242,6 +242,11 @@ func GenerateMonitorID(s string) (string, error) {
 		}
 	}
 
+	// clean up some junk from the edid serial number
+	for _, old := range []string{"\n", "\xff"} {
+		displaySerialNumber = strings.ReplaceAll(displaySerialNumber, old, "")
+	}
+
 	str := fmt.Sprintf("%s-%d-%d-%v-%v", manufacturer, product, serial, displayName, displaySerialNumber)
 	return str, nil
 }
