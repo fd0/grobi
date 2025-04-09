@@ -100,7 +100,6 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 	var eventReceived bool
 
 	var lastRule Rule
-	var lastOutputs Outputs
 	for {
 		if !disablePoll {
 			var outputs Outputs
@@ -117,53 +116,6 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 				return fmt.Errorf("detecting outputs: %w", err)
 			}
 
-			// disable outputs which have a changed display
-			var off Outputs
-			for _, o := range outputs {
-				for _, last := range lastOutputs {
-					if o.Name != last.Name {
-						continue
-					}
-
-					if last.Active() && !o.Active() {
-						V("  output %v: monitor not active any more, disabling", o.Name)
-						off = append(off, o)
-						continue
-					}
-
-					if o.Active() && o.MonitorID != last.MonitorID {
-						V("  output %v: monitor has changed, disabling", o.Name)
-						off = append(off, o)
-						continue
-					}
-				}
-			}
-
-			if len(off) > 0 {
-				V("disable %d outputs", len(off))
-
-				cmd, err := DisableOutputs(off)
-				if err != nil {
-					return fmt.Errorf("disabling outputs: %w", err)
-				}
-
-				// forget the last rule set, something has changed for sure
-				lastRule = Rule{}
-
-				err = RunCommand(cmd)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error disabling: %v\n", err)
-				}
-
-				// refresh outputs again
-				outputs, err = GetOutputs()
-				if err != nil {
-					return fmt.Errorf("detecting outputs after disabling: %w", err)
-				}
-
-				V("new outputs after disable: %v", outputs)
-			}
-
 			rule, err := MatchRules(globalOpts.cfg.Rules, outputs)
 			if err != nil {
 				return fmt.Errorf("matching rules: %w", err)
@@ -172,6 +124,15 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 			if rule.Name != lastRule.Name {
 				V("outputs: %v", outputs)
 				V("new rule found: %v", rule.Name)
+
+				// Disable old rules outputs if they are not in current active rules outputs.
+				diff := rule.OutputsDiff(lastRule)
+				if len(diff) > 0 {
+					err = RunCommand(DisableOutputs(diff))
+					if err != nil {
+						fmt.Fprintf(os.Stderr, "error disabling: %v", err)
+					}
+				}
 
 				err = ApplyRule(outputs, rule)
 				if err != nil {
@@ -185,15 +146,7 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 					disablePoll = true
 					backoffCh = time.After(time.Duration(globalOpts.Pause) * time.Second)
 				}
-
-				// refresh outputs for next cycle
-				outputs, err = GetOutputs()
-				if err != nil {
-					return fmt.Errorf("refreshing outputs: %w", err)
-				}
 			}
-
-			lastOutputs = outputs
 		}
 
 		select {

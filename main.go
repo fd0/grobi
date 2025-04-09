@@ -56,8 +56,10 @@ func RunCommand(cmd *exec.Cmd) error {
 	return cmd.Run()
 }
 
-var globalOpts = GlobalOptions{}
-var parser = flags.NewParser(&globalOpts, flags.Default)
+var (
+	globalOpts = GlobalOptions{}
+	parser     = flags.NewParser(&globalOpts, flags.Default)
+)
 
 func V(s string, data ...interface{}) {
 	if globalOpts.Verbose && globalOpts.log == nil {

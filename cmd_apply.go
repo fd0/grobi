@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"html/template"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 type CmdApply struct{}
@@ -25,35 +28,63 @@ func (cmd CmdApply) Usage() string {
 }
 
 func ApplyRule(outputs Outputs, rule Rule) error {
-	var cmds []*exec.Cmd
+	var cmds commands
 	var err error
 
 	switch {
 	case rule.ConfigureSingle != "" || len(rule.ConfigureRow) > 0 || len(rule.ConfigureColumn) > 0:
 		cmds, err = BuildCommandOutputRow(rule, outputs)
 	case rule.ConfigureCommand != "":
-		cmds = []*exec.Cmd{exec.Command("sh", "-c", rule.ConfigureCommand)}
+		cmds = commands{command{"sh", "-c", rule.ConfigureCommand}}
 	default:
 		return fmt.Errorf("no output configuration for rule %v", rule.Name)
-	}
-
-	after := append(globalOpts.cfg.ExecuteAfter, rule.ExecuteAfter...)
-	if len(after) > 0 {
-		for _, cmd := range after {
-			cmds = append(cmds, exec.Command("sh", "-c", cmd))
-		}
 	}
 
 	if err != nil {
 		return err
 	}
+
+	foundError := false
 	for _, cmd := range cmds {
-		err = RunCommand(cmd)
+		for i := 0; i < 4; i++ {
+			err = RunCommand(cmd.Cmd())
+			if err == nil {
+				break
+			}
+			fmt.Fprintf(os.Stderr, "executing command for rule %v failed: %v\n", rule.Name, err)
+
+			dur := time.Millisecond * 500 * time.Duration(i)
+			fmt.Fprintf(os.Stderr, "trying again in %s", dur)
+			time.Sleep(dur)
+		}
+		if err != nil {
+			fmt.Fprint(os.Stderr, "failed after 3 retries")
+			foundError = true
+		}
+	}
+	if foundError {
+		return nil // Dont run ExecuteAfter if xrandr commands failed
+	}
+
+	newOutputs, err := DetectOutputs()
+	if err != nil {
+		return err
+	}
+
+	after := append(globalOpts.cfg.ExecuteAfter, rule.ExecuteAfter...)
+	for _, cmd := range after {
+		buf := &bytes.Buffer{}
+		tmpl, err := template.New("titleTest").Parse(cmd)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "executing template for rule %v failed: %v\n", rule.Name, err)
+			continue
+		}
+		tmpl.Execute(buf, newOutputs)
+		err = RunCommand(exec.Command("sh", "-c", buf.String()))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "executing command for rule %v failed: %v\n", rule.Name, err)
 		}
 	}
-
 	return nil
 }
 
