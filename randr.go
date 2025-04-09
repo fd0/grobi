@@ -85,6 +85,19 @@ func (o Output) Active() bool {
 // Outputs is a list of outputs.
 type Outputs []Output
 
+func (os Outputs) NthConnected(i int) (string, error) {
+	outputs := []string{}
+	for _, o := range os {
+		if o.Connected {
+			outputs = append(outputs, o.Name)
+		}
+	}
+	if len(outputs) < i {
+		return "", fmt.Errorf("output not found")
+	}
+	return outputs[i], nil
+}
+
 // Present returns true iff the list of outputs contains the named output.
 func (os Outputs) Present(name string) bool {
 	for _, o := range os {
@@ -536,7 +549,7 @@ func BuildCommandOutputRow(rule Rule, current Outputs) (commands, error) {
 	lastOutput := ""
 	for i, output := range outputs {
 		data := strings.SplitN(output, "@", 3)
-		name := data[0]
+		name := rule.GetOutputNameFromWildcard(data[0], current)
 		mode := ""
 		rate := ""
 		if len(data) > 1 {

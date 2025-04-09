@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -130,5 +131,27 @@ func TestOutputsDiff(t *testing.T) {
 	diff := new.OutputsDiff(old)
 	if diff[0].Name != "two" {
 		t.Errorf("expected diff to be two got: %s", diff[0].Name)
+	}
+}
+
+func TestBuildCommandOutputRow(t *testing.T) {
+	rule := Rule{
+		OutputsConnected: []string{"eDP", "DisplayPort-*", "DisplayPort-*"},
+		ConfigureRow:     []string{"eDP", "$1", "$2"},
+		Atomic:           true,
+	}
+
+	outputs := Outputs{
+		Output{Name: "eDP", Connected: true},
+		Output{Name: "DisplayPort-3", Connected: true},
+		Output{Name: "DisplayPort-5", Connected: true},
+	}
+
+	commands, err := BuildCommandOutputRow(rule, outputs)
+	if err != nil {
+		t.Error(err)
+	}
+	if strings.Join(commands[0], " ") != "xrandr --output eDP --auto --output DisplayPort-3 --auto --right-of eDP --output DisplayPort-5 --auto --right-of DisplayPort-3" {
+		t.Error("unexpected command: ", commands)
 	}
 }

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"html/template"
 	"os"
 	"os/exec"
 	"strings"
@@ -64,9 +66,21 @@ func ApplyRule(outputs Outputs, rule Rule) error {
 		return nil // Dont run ExecuteAfter if xrandr commands failed
 	}
 
+	newOutputs, err := DetectOutputs()
+	if err != nil {
+		return err
+	}
+
 	after := append(globalOpts.cfg.ExecuteAfter, rule.ExecuteAfter...)
 	for _, cmd := range after {
-		err = RunCommand(exec.Command("sh", "-c", cmd))
+		buf := &bytes.Buffer{}
+		tmpl, err := template.New("titleTest").Parse(cmd)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "executing template for rule %v failed: %v\n", rule.Name, err)
+			continue
+		}
+		tmpl.Execute(buf, newOutputs)
+		err = RunCommand(exec.Command("sh", "-c", buf.String()))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "executing command for rule %v failed: %v\n", rule.Name, err)
 		}
