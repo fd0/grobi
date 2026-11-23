@@ -8,7 +8,7 @@ outputs via RANDR according to configurable profiles.
 
 # Installation
 
-Grobi requires Go version 1.11 or newer to compile. To build grobi, run the
+Grobi requires Go version 1.26 or newer to compile. To build grobi, run the
 following command:
 
 ```shell

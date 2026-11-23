@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -56,7 +55,7 @@ func readConfig(name string) (Config, error) {
 		return Config{}, err
 	}
 
-	buf, err := ioutil.ReadAll(rd)
+	buf, err := io.ReadAll(rd)
 	if err != nil {
 		return Config{}, err
 	}

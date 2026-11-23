@@ -19,7 +19,7 @@ func init() {
 	}
 }
 
-func (cmd CmdVersion) Execute(args []string) error {
+func (cmd CmdVersion) Execute(_ []string) error {
 	fmt.Printf("grobi %s\ncompiled with %v on %v\n",
 		version, runtime.Version(), runtime.GOOS)
 

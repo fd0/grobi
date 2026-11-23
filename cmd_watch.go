@@ -72,7 +72,7 @@ func subscribeXEvents(ch chan<- Event, done <-chan struct{}) {
 	}
 }
 
-func (cmd CmdWatch) Execute(args []string) (err error) {
+func (cmd CmdWatch) Execute(_ []string) (err error) {
 	err = globalOpts.ReadConfigfile()
 	if err != nil {
 		return fmt.Errorf("reading config file failed: %w", err)

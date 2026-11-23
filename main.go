@@ -1,3 +1,4 @@
+// Command grobi automatically configures X outputs (monitors) via RandR.
 package main
 
 import (
