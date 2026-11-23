@@ -56,5 +56,5 @@ func parseDevdEvent(line string) LidState {
 
 // subscribeLidEvents reads lid events from devd.
 func subscribeLidEvents(ch chan<- struct{}, done <-chan struct{}) {
-	watchLidSocket("unixpacket", devdSocket, parseDevdEvent, ch, done)
+	watchLidSocket("unixpacket", []string{devdSocket}, parseDevdEvent, ch, done)
 }

@@ -14,10 +14,11 @@ const lidReconnectDelay = 10 * time.Second
 // ch for each one. parse returns LidUnknown for lines which aren't lid events.
 // A missing or closed socket is retried until done is closed, polling keeps
 // working in the meantime.
-func watchLidSocket(network, path string, parse func(string) LidState, ch chan<- struct{}, done <-chan struct{}) {
+// The paths are tried in order on each attempt.
+func watchLidSocket(network string, paths []string, parse func(string) LidState, ch chan<- struct{}, done <-chan struct{}) {
 	connected := true // log the first failure
 	for {
-		conn, err := net.Dial(network, path)
+		conn, path, err := dialFirst(network, paths)
 		if err != nil {
 			if connected {
 				V("lid events: %v, retrying every %v\n", err, lidReconnectDelay)
@@ -65,4 +66,18 @@ func readLidEvents(conn net.Conn, parse func(string) LidState, ch chan<- struct{
 		default:
 		}
 	}
+}
+
+// dialFirst connects to the first path in paths which accepts a connection.
+// The error returned is the one from the last path.
+func dialFirst(network string, paths []string) (net.Conn, string, error) {
+	var err error
+	for _, path := range paths {
+		var conn net.Conn
+		conn, err = net.Dial(network, path)
+		if err == nil {
+			return conn, path, nil
+		}
+	}
+	return nil, "", err
 }

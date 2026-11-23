@@ -20,7 +20,7 @@ func TestWatchLidSocket(t *testing.T) {
 	ch := make(chan struct{}, 1)
 	done := make(chan struct{})
 	defer close(done)
-	go watchLidSocket("unix", path, parseAcpidEvent, ch, done)
+	go watchLidSocket("unix", []string{filepath.Join(t.TempDir(), "missing"), path}, parseTestEvent, ch, done)
 
 	conn, err := ln.Accept()
 	if err != nil {
@@ -28,7 +28,7 @@ func TestWatchLidSocket(t *testing.T) {
 	}
 	defer func() { _ = conn.Close() }()
 
-	_, err = conn.Write([]byte("button/power PBTN 00000080 00000000\nbutton/lid LID close\n"))
+	_, err = conn.Write([]byte("other\nclosed\n"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,4 +43,11 @@ func TestWatchLidSocket(t *testing.T) {
 		t.Errorf("wanted closed, got %v", l)
 	}
 	lastLidEvent.Store(int32(LidUnknown))
+}
+
+func parseTestEvent(line string) LidState {
+	if line == "closed" {
+		return LidClosed
+	}
+	return LidUnknown
 }

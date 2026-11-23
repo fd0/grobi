@@ -20,6 +20,7 @@ type GlobalOptions struct {
 	ActivePoll   bool   `short:"a" long:"active-poll"                 description:"Force xrandr to re-detect outputs during polling"`
 	Pause        uint   `short:"p" long:"pause"       default:"0"     description:"Number of seconds to pause after a change was executed"`
 	Logfile      string `short:"l" long:"logfile"                     description:"Write log to file"`
+	AcpidSocket  string `long:"acpid-socket"                description:"Read lid events from this acpid socket (Linux), default: /run/acpid.socket, then /var/run/acpid.socket"`
 
 	cfg     *Config
 	log     *log.Logger

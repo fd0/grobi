@@ -22,19 +22,21 @@ Usage:
   grobi [OPTIONS] <command>
 
 Application Options:
-  -v, --verbose      Be verbose
-  -C, --config=      Read config from this file
-  -n, --dry-run      Only print what commands would be executed without
-                     actually running them
-  -i, --interval=    Number of seconds between polls, set to zero to disable
-                     polling (default: 2)
-  -a, --active-poll  Force xrandr to re-detect outputs during polling
-  -p, --pause=       Number of seconds to pause after a change was executed
-                     (default: 0)
-  -l, --logfile=     Write log to file
+  -v, --verbose       Be verbose
+  -C, --config=       Read config from this file
+  -n, --dry-run       Only print what commands would be executed without
+                      actually running them
+  -i, --interval=     Number of seconds between polls, set to zero to disable
+                      polling (default: 2)
+  -a, --active-poll   Force xrandr to re-detect outputs during polling
+  -p, --pause=        Number of seconds to pause after a change was executed
+                      (default: 0)
+  -l, --logfile=      Write log to file
+      --acpid-socket= Read lid events from this acpid socket (Linux), default:
+                      /run/acpid.socket, then /var/run/acpid.socket
 
 Help Options:
-  -h, --help         Show this help message
+  -h, --help          Show this help message
 
 Available commands:
   apply    apply a rule

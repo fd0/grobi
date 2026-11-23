@@ -6,7 +6,9 @@ import (
 	"strings"
 )
 
-const acpidSocket = "/var/run/acpid.socket"
+// acpidSockets are tried in order: systemd socket activation uses /run, acpid
+// itself defaults to /var/run. --acpid-socket replaces both.
+var acpidSockets = []string{"/run/acpid.socket", "/var/run/acpid.socket"}
 
 // Fields of an acpid event line, e.g. "button/lid LID close".
 const (
@@ -54,5 +56,9 @@ func parseAcpidEvent(line string) LidState {
 
 // subscribeLidEvents reads lid events from acpid, if it runs.
 func subscribeLidEvents(ch chan<- struct{}, done <-chan struct{}) {
-	watchLidSocket("unix", acpidSocket, parseAcpidEvent, ch, done)
+	paths := acpidSockets
+	if globalOpts.AcpidSocket != "" {
+		paths = []string{globalOpts.AcpidSocket}
+	}
+	watchLidSocket("unix", paths, parseAcpidEvent, ch, done)
 }
