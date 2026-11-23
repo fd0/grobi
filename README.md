@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/fd0/grobi/workflows/test/badge.svg)](https://github.com/fd0/grobi/actions?query=workflow%3Atest)
+[![Build Status](https://github.com/fd0/grobi/actions/workflows/tests.yml/badge.svg)](https://github.com/fd0/grobi/actions/workflows/tests.yml)
 
 # grobi
 
