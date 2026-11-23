@@ -41,7 +41,7 @@ Help Options:
 Available commands:
   apply    apply a rule
   rules    list rules
-  show     show monitors and IDs
+  show     show monitors, IDs and input devices
   update   update outputs
   version  display version
   watch    watch for changes

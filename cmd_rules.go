@@ -41,6 +41,8 @@ func (cmd CmdRules) Execute(_ []string) error {
 			printList("Present", rule.OutputsPresent)
 			printList("Absent", rule.OutputsAbsent)
 			printOne("Lid", rule.Lid)
+			printList("InputsPresent", rule.InputsPresent)
+			printList("InputsAbsent", rule.InputsAbsent)
 			printList("ConfigureRow", rule.ConfigureRow)
 			printList("ConfigureColumn", rule.ConfigureColumn)
 			printOne("ConfigureSingle", rule.ConfigureSingle)

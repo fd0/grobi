@@ -12,8 +12,8 @@ func TestReadConfigSample(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(cfg.Rules) != 7 {
-		t.Fatalf("want 7 rules, got %d", len(cfg.Rules))
+	if len(cfg.Rules) != 8 {
+		t.Fatalf("want 8 rules, got %d", len(cfg.Rules))
 	}
 
 	if l := cfg.Rules[0]; l.Lid != "closed" {

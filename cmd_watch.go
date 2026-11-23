@@ -44,6 +44,11 @@ func subscribeXEvents(ch chan<- Event, done <-chan struct{}) {
 		return
 	}
 
+	// XInput is optional, without it the input devices are only polled.
+	// Register its event before any events are selected, see
+	// registerInputEvents.
+	xiOpcode, xiErr := registerInputEvents(X)
+
 	root := xproto.Setup(X).DefaultScreen(X).Root
 
 	eventMask := randr.NotifyMaskScreenChange |
@@ -55,6 +60,15 @@ func subscribeXEvents(ch chan<- Event, done <-chan struct{}) {
 	if err != nil {
 		ch <- Event{Error: err}
 		return
+	}
+
+	if xiErr == nil {
+		xiErr = selectInputEvents(X, xiOpcode, root)
+	}
+	if xiErr != nil {
+		V("input device events: %v\n", xiErr)
+	} else {
+		V("successfully subscribed to XInput device events\n")
 	}
 
 	for {
@@ -176,6 +190,7 @@ func (cmd CmdWatch) Execute(_ []string) (err error) {
 			if rule.Name != lastRule.Name {
 				V("outputs: %v", outputs)
 				V("lid: %v", state.Lid)
+				V("inputs: %q", state.Inputs)
 				V("new rule found: %v", rule.Name)
 
 				err = ApplyRule(outputs, rule)
@@ -203,11 +218,17 @@ func (cmd CmdWatch) Execute(_ []string) (err error) {
 
 		select {
 		case ev := <-ch:
-			V("new RANDR change event received\n")
 			if ev.Error != nil {
-				return fmt.Errorf("RANDR change event contains error: %w", ev.Error)
+				return fmt.Errorf("event from the X server contains error: %w", ev.Error)
 			}
 
+			// outputs are unchanged, the next round re-reads the input devices
+			if _, ok := ev.Event.(devicePresenceEvent); ok {
+				V("input device event received\n")
+				break
+			}
+
+			V("new RANDR change event received\n")
 			eventReceived = true
 		case <-lidCh:
 			V("lid event received\n")

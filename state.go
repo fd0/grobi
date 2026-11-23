@@ -30,11 +30,13 @@ func (l LidState) String() string {
 type State struct {
 	Outputs Outputs
 	Lid     LidState
+	// Inputs is nil if the input devices are unknown.
+	Inputs InputDevices
 }
 
-// CurrentState combines outputs with the current lid state.
+// CurrentState combines outputs with the current lid state and input devices.
 func CurrentState(outputs Outputs) State {
-	return State{Outputs: outputs, Lid: ReadLidState()}
+	return State{Outputs: outputs, Lid: ReadLidState(), Inputs: ReadInputDevices()}
 }
 
 func validLid(s string) error {

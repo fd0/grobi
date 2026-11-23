@@ -86,7 +86,7 @@ func (cfg Config) Valid() error {
 			return fmt.Errorf("rule %q: %w", rule.Name, err)
 		}
 
-		for _, list := range [][]string{rule.OutputsPresent, rule.OutputsAbsent, rule.OutputsConnected, rule.OutputsDisconnected} {
+		for _, list := range [][]string{rule.OutputsPresent, rule.OutputsAbsent, rule.OutputsConnected, rule.OutputsDisconnected, rule.InputsPresent, rule.InputsAbsent} {
 			for _, pat := range list {
 				if _, err := path.Match(pat, ""); err != nil {
 					return fmt.Errorf("pattern %q malformed: %v", pat, err)
