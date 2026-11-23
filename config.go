@@ -8,7 +8,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"gopkg.in/yaml.v2"
+	"go.yaml.in/yaml/v4"
 )
 
 // Config holds all configuration for grobi.
