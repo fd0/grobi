@@ -40,6 +40,7 @@ func (cmd CmdRules) Execute(_ []string) error {
 			printList("Disconnected", rule.OutputsDisconnected)
 			printList("Present", rule.OutputsPresent)
 			printList("Absent", rule.OutputsAbsent)
+			printOne("Lid", rule.Lid)
 			printList("ConfigureRow", rule.ConfigureRow)
 			printList("ConfigureColumn", rule.ConfigureColumn)
 			printOne("ConfigureSingle", rule.ConfigureSingle)

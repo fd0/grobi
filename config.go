@@ -82,6 +82,10 @@ func readConfig(name string) (Config, error) {
 func (cfg Config) Valid() error {
 
 	for _, rule := range cfg.Rules {
+		if err := validLid(rule.Lid); err != nil {
+			return fmt.Errorf("rule %q: %w", rule.Name, err)
+		}
+
 		for _, list := range [][]string{rule.OutputsPresent, rule.OutputsAbsent, rule.OutputsConnected, rule.OutputsDisconnected} {
 			for _, pat := range list {
 				if _, err := path.Match(pat, ""); err != nil {

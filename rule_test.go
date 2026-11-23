@@ -107,10 +107,45 @@ var testOutputs = []Output{
 
 func TestRuleMatch(t *testing.T) {
 	for i, test := range testRules {
-		m := test.rule.Match(testOutputs)
+		m := test.rule.Match(State{Outputs: testOutputs})
 		if m != test.match {
 			t.Errorf("test rule %d wrong match: wanted %v, got %v", i, test.match, m)
 			continue
+		}
+	}
+}
+
+func TestRuleMatchLid(t *testing.T) {
+	tests := []struct {
+		lid   string
+		state LidState
+		match bool
+	}{
+		{"", LidUnknown, true},
+		{"", LidOpen, true},
+		{"", LidClosed, true},
+		{"open", LidOpen, true},
+		{"open", LidClosed, false},
+		{"open", LidUnknown, false},
+		{"closed", LidClosed, true},
+		{"closed", LidOpen, false},
+		{"closed", LidUnknown, false},
+	}
+
+	for _, test := range tests {
+		r := Rule{OutputsConnected: []string{"HDMI"}, Lid: test.lid}
+		m := r.Match(State{Outputs: testOutputs, Lid: test.state})
+		if m != test.match {
+			t.Errorf("lid %q, state %v: wanted %v, got %v", test.lid, test.state, test.match, m)
+		}
+	}
+}
+
+func TestConfigValidLid(t *testing.T) {
+	for lid, ok := range map[string]bool{"": true, "open": true, "closed": true, "close": false, "Open": false} {
+		err := Config{Rules: []Rule{{Name: "x", Lid: lid}}}.Valid()
+		if (err == nil) != ok {
+			t.Errorf("lid %q: wanted ok=%v, got %v", lid, ok, err)
 		}
 	}
 }

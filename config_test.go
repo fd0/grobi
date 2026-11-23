@@ -12,11 +12,15 @@ func TestReadConfigSample(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(cfg.Rules) != 6 {
-		t.Fatalf("want 6 rules, got %d", len(cfg.Rules))
+	if len(cfg.Rules) != 7 {
+		t.Fatalf("want 7 rules, got %d", len(cfg.Rules))
 	}
 
-	r := cfg.Rules[0]
+	if l := cfg.Rules[0]; l.Lid != "closed" {
+		t.Errorf("unexpected lid rule: %+v", l)
+	}
+
+	r := cfg.Rules[1]
 	if r.Name != "Docking Station" || !r.Atomic || r.Primary != "HDMI3" {
 		t.Errorf("unexpected first rule: %+v", r)
 	}
