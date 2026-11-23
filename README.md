@@ -22,24 +22,27 @@ Usage:
   grobi [OPTIONS] <command>
 
 Application Options:
-  -v, --verbose   Be verbose (false)
-  -C, --config=   Read config from this file
-  -n, --dry-run   Only print what commands would be executed without actually
-                  runnig them
-  -i, --interval= Number of seconds between polls, set to zero to disable
-                  polling (5)
-  -p, --pause=    Number of seconds to pause after a change was executed (2)
-  -l, --logfile=  Write log to file
+  -v, --verbose      Be verbose
+  -C, --config=      Read config from this file
+  -n, --dry-run      Only print what commands would be executed without
+                     actually running them
+  -i, --interval=    Number of seconds between polls, set to zero to disable
+                     polling (default: 2)
+  -a, --active-poll  Force xrandr to re-detect outputs during polling
+  -p, --pause=       Number of seconds to pause after a change was executed
+                     (default: 0)
+  -l, --logfile=     Write log to file
 
 Help Options:
-  -h, --help      Show this help message
+  -h, --help         Show this help message
 
 Available commands:
   apply    apply a rule
+  rules    list rules
+  show     show monitors and IDs
   update   update outputs
   version  display version
   watch    watch for changes
-
 ```
 
 # Configuration
