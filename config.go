@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 
-	"gopkg.in/yaml.v2"
+	"go.yaml.in/yaml/v4"
 )
 
 // Config holds all configuration for grobi.
@@ -56,7 +55,7 @@ func readConfig(name string) (Config, error) {
 		return Config{}, err
 	}
 
-	buf, err := ioutil.ReadAll(rd)
+	buf, err := io.ReadAll(rd)
 	if err != nil {
 		return Config{}, err
 	}
@@ -83,7 +82,11 @@ func readConfig(name string) (Config, error) {
 func (cfg Config) Valid() error {
 
 	for _, rule := range cfg.Rules {
-		for _, list := range [][]string{rule.OutputsPresent, rule.OutputsAbsent, rule.OutputsConnected, rule.OutputsDisconnected} {
+		if err := validLid(rule.Lid); err != nil {
+			return fmt.Errorf("rule %q: %w", rule.Name, err)
+		}
+
+		for _, list := range [][]string{rule.OutputsPresent, rule.OutputsAbsent, rule.OutputsConnected, rule.OutputsDisconnected, rule.InputsPresent, rule.InputsAbsent} {
 			for _, pat := range list {
 				if _, err := path.Match(pat, ""); err != nil {
 					return fmt.Errorf("pattern %q malformed: %v", pat, err)

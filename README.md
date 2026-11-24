@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/fd0/grobi/workflows/test/badge.svg)](https://github.com/fd0/grobi/actions?query=workflow%3Atest)
+[![Build Status](https://github.com/fd0/grobi/actions/workflows/tests.yml/badge.svg)](https://github.com/fd0/grobi/actions/workflows/tests.yml)
 
 # grobi
 
@@ -8,7 +8,7 @@ outputs via RANDR according to configurable profiles.
 
 # Installation
 
-Grobi requires Go version 1.11 or newer to compile. To build grobi, run the
+Grobi requires Go version 1.26 or newer to compile. To build grobi, run the
 following command:
 
 ```shell
@@ -22,24 +22,29 @@ Usage:
   grobi [OPTIONS] <command>
 
 Application Options:
-  -v, --verbose   Be verbose (false)
-  -C, --config=   Read config from this file
-  -n, --dry-run   Only print what commands would be executed without actually
-                  runnig them
-  -i, --interval= Number of seconds between polls, set to zero to disable
-                  polling (5)
-  -p, --pause=    Number of seconds to pause after a change was executed (2)
-  -l, --logfile=  Write log to file
+  -v, --verbose       Be verbose
+  -C, --config=       Read config from this file
+  -n, --dry-run       Only print what commands would be executed without
+                      actually running them
+  -i, --interval=     Number of seconds between polls, set to zero to disable
+                      polling (default: 2)
+  -a, --active-poll   Force xrandr to re-detect outputs during polling
+  -p, --pause=        Number of seconds to pause after a change was executed
+                      (default: 0)
+  -l, --logfile=      Write log to file
+      --acpid-socket= Read lid events from this acpid socket (Linux), default:
+                      /run/acpid.socket, then /var/run/acpid.socket
 
 Help Options:
-  -h, --help      Show this help message
+  -h, --help          Show this help message
 
 Available commands:
   apply    apply a rule
+  rules    list rules
+  show     show monitors, IDs and input devices
   update   update outputs
   version  display version
   watch    watch for changes
-
 ```
 
 # Configuration

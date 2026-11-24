@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/BurntSushi/xgb"
-	"github.com/BurntSushi/xgb/randr"
-	"github.com/BurntSushi/xgb/xproto"
+	"github.com/jezek/xgb"
+	"github.com/jezek/xgb/randr"
+	"github.com/jezek/xgb/xproto"
 )
 
 type CmdWatch struct{}
@@ -44,6 +44,11 @@ func subscribeXEvents(ch chan<- Event, done <-chan struct{}) {
 		return
 	}
 
+	// XInput is optional, without it the input devices are only polled.
+	// Register its event before any events are selected, see
+	// registerInputEvents.
+	xiOpcode, xiErr := registerInputEvents(X)
+
 	root := xproto.Setup(X).DefaultScreen(X).Root
 
 	eventMask := randr.NotifyMaskScreenChange |
@@ -55,6 +60,15 @@ func subscribeXEvents(ch chan<- Event, done <-chan struct{}) {
 	if err != nil {
 		ch <- Event{Error: err}
 		return
+	}
+
+	if xiErr == nil {
+		xiErr = selectInputEvents(X, xiOpcode, root)
+	}
+	if xiErr != nil {
+		V("input device events: %v\n", xiErr)
+	} else {
+		V("successfully subscribed to XInput device events\n")
 	}
 
 	for {
@@ -72,7 +86,7 @@ func subscribeXEvents(ch chan<- Event, done <-chan struct{}) {
 	}
 }
 
-func (cmd CmdWatch) Execute(args []string) (err error) {
+func (cmd CmdWatch) Execute(_ []string) (err error) {
 	err = globalOpts.ReadConfigfile()
 	if err != nil {
 		return fmt.Errorf("reading config file failed: %w", err)
@@ -86,6 +100,9 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 
 	ch := make(chan Event)
 	go subscribeXEvents(ch, done)
+
+	lidCh := make(chan struct{}, lidWakeupBuffer)
+	go subscribeLidEvents(lidCh, done)
 
 	V("grobi %s, compiled with %v on %v\n", version, runtime.Version(), runtime.GOOS)
 	V("successfully subscribed to X RANDR change events\n")
@@ -164,13 +181,16 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 				V("new outputs after disable: %v", outputs)
 			}
 
-			rule, err := MatchRules(globalOpts.cfg.Rules, outputs)
+			state := CurrentState(outputs)
+			rule, err := MatchRules(globalOpts.cfg.Rules, state)
 			if err != nil {
 				return fmt.Errorf("matching rules: %w", err)
 			}
 
 			if rule.Name != lastRule.Name {
 				V("outputs: %v", outputs)
+				V("lid: %v", state.Lid)
+				V("inputs: %q", state.Inputs)
 				V("new rule found: %v", rule.Name)
 
 				err = ApplyRule(outputs, rule)
@@ -198,11 +218,20 @@ func (cmd CmdWatch) Execute(args []string) (err error) {
 
 		select {
 		case ev := <-ch:
-			V("new RANDR change event received\n")
 			if ev.Error != nil {
-				return fmt.Errorf("RANDR change event contains error: %w", ev.Error)
+				return fmt.Errorf("event from the X server contains error: %w", ev.Error)
 			}
 
+			// outputs are unchanged, the next round re-reads the input devices
+			if _, ok := ev.Event.(devicePresenceEvent); ok {
+				V("input device event received\n")
+				break
+			}
+
+			V("new RANDR change event received\n")
+			eventReceived = true
+		case <-lidCh:
+			V("lid event received\n")
 			eventReceived = true
 		case <-tickerCh:
 		case <-backoffCh:

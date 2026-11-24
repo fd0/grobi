@@ -26,7 +26,7 @@ func printOne(label string, arg string) {
 	}
 }
 
-func (cmd CmdRules) Execute(args []string) error {
+func (cmd CmdRules) Execute(_ []string) error {
 	err := globalOpts.ReadConfigfile()
 	if err != nil {
 		return err
@@ -40,6 +40,9 @@ func (cmd CmdRules) Execute(args []string) error {
 			printList("Disconnected", rule.OutputsDisconnected)
 			printList("Present", rule.OutputsPresent)
 			printList("Absent", rule.OutputsAbsent)
+			printOne("Lid", rule.Lid)
+			printList("InputsPresent", rule.InputsPresent)
+			printList("InputsAbsent", rule.InputsAbsent)
 			printList("ConfigureRow", rule.ConfigureRow)
 			printList("ConfigureColumn", rule.ConfigureColumn)
 			printOne("ConfigureSingle", rule.ConfigureSingle)
