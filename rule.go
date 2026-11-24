@@ -9,6 +9,9 @@ type Rule struct {
 	OutputsPresent      []string `yaml:"outputs_present"`
 	OutputsAbsent       []string `yaml:"outputs_absent"`
 
+	// Lid is "open", "closed" or empty (lid ignored).
+	Lid string `yaml:"lid"`
+
 	ConfigureRow     []string `yaml:"configure_row"`
 	ConfigureColumn  []string `yaml:"configure_column"`
 	ConfigureSingle  string   `yaml:"configure_single"`
@@ -23,8 +26,14 @@ type Rule struct {
 	ExecuteAfter []string `yaml:"execute_after"`
 }
 
-// Match returns true iff the rule matches for the given list of outputs.
-func (r Rule) Match(outputs Outputs) bool {
+// Match returns true iff the rule matches the given state. A rule with a lid
+// condition never matches while the lid state is unknown.
+func (r Rule) Match(state State) bool {
+	if r.Lid != "" && r.Lid != state.Lid.String() {
+		return false
+	}
+
+	outputs := state.Outputs
 	for _, name := range r.OutputsAbsent {
 		if outputs.Present(name) {
 			return false

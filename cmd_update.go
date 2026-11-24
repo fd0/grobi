@@ -12,9 +12,9 @@ func init() {
 	}
 }
 
-func MatchRules(rules []Rule, outputs Outputs) (Rule, error) {
+func MatchRules(rules []Rule, state State) (Rule, error) {
 	for _, rule := range rules {
-		if rule.Match(outputs) {
+		if rule.Match(state) {
 			return rule, nil
 		}
 	}
@@ -22,7 +22,7 @@ func MatchRules(rules []Rule, outputs Outputs) (Rule, error) {
 	return Rule{}, nil
 }
 
-func (cmd CmdUpdate) Execute(args []string) (err error) {
+func (cmd CmdUpdate) Execute(_ []string) (err error) {
 	err = globalOpts.ReadConfigfile()
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func (cmd CmdUpdate) Execute(args []string) (err error) {
 		return err
 	}
 
-	rule, err := MatchRules(globalOpts.cfg.Rules, outputs)
+	rule, err := MatchRules(globalOpts.cfg.Rules, CurrentState(outputs))
 	if err != nil {
 		return err
 	}

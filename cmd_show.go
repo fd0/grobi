@@ -18,7 +18,7 @@ func ListOutput(output Output) {
 	fmt.Printf("%- 10s %s\n", output.Name, output.MonitorID)
 }
 
-func (cmd CmdShow) Execute(args []string) error {
+func (cmd CmdShow) Execute(_ []string) error {
 	outputs, err := DetectOutputs()
 	if err != nil {
 		return err
