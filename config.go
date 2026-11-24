@@ -4,12 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 
-	"gopkg.in/yaml.v2"
+	"go.yaml.in/yaml/v4"
 )
 
 // Config holds all configuration for grobi.
@@ -56,7 +55,7 @@ func readConfig(name string) (Config, error) {
 		return Config{}, err
 	}
 
-	buf, err := ioutil.ReadAll(rd)
+	buf, err := io.ReadAll(rd)
 	if err != nil {
 		return Config{}, err
 	}

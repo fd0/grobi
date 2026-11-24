@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/BurntSushi/xgb"
-	"github.com/BurntSushi/xgb/randr"
-	"github.com/BurntSushi/xgb/xproto"
+	"github.com/jezek/xgb"
+	"github.com/jezek/xgb/randr"
+	"github.com/jezek/xgb/xproto"
 )
 
 type CmdWatch struct{}
@@ -72,7 +72,7 @@ func subscribeXEvents(ch chan<- Event, done <-chan struct{}) {
 	}
 }
 
-func (cmd CmdWatch) Execute(args []string) (err error) {
+func (cmd CmdWatch) Execute(_ []string) (err error) {
 	err = globalOpts.ReadConfigfile()
 	if err != nil {
 		return fmt.Errorf("reading config file failed: %w", err)

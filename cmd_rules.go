@@ -26,7 +26,7 @@ func printOne(label string, arg string) {
 	}
 }
 
-func (cmd CmdRules) Execute(args []string) error {
+func (cmd CmdRules) Execute(_ []string) error {
 	err := globalOpts.ReadConfigfile()
 	if err != nil {
 		return err

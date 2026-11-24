@@ -1,60 +1,69 @@
 name: test
+
 on:
   # run tests on push to master, but not when other branches are pushed to
   push:
-    branches:
-      - master
-
+    branches: [master]
   # run tests for all pull requests
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# cancel superseded runs of the same branch / pull request
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
-        # list of jobs to run:
-        go:
-          - 1.15.x
-          - 1.16.x
+        # minimum version from go.mod and the latest stable release
+        go: [go.mod, stable]
 
     name: Go ${{ matrix.go }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up Go ${{ matrix.go }}
-        uses: actions/setup-go@v2
+      - uses: actions/checkout@v7
         with:
-          go-version: ${{ matrix.go }}
+          persist-credentials: false
 
-      - name: Check out code
-        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: ${{ matrix.go != 'go.mod' && matrix.go || '' }}
+          go-version-file: ${{ matrix.go == 'go.mod' && 'go.mod' || '' }}
 
       - name: Build
-        run: |
-          go build
+        run: go build ./...
 
-      - name: Run local Tests
-        run: |
-          go test -cover ./...
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -race -cover ./...
 
   lint:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Check go.mod/go.sum are tidy
+        run: go mod tidy -diff
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v9
         with:
-          # Required: the version of golangci-lint is required and must be
-          # specified without patch version: we always use the latest patch
-          # version.
-          version: v1.37
-          args: --verbose --timeout 5m
-
-      - name: Check go.mod/go.sum
-        run: |
-          echo "check if go.mod and go.sum are up to date"
-          go mod tidy
-          git diff --exit-code go.mod go.sum
+          version: v2.15

@@ -22,7 +22,7 @@ func MatchRules(rules []Rule, outputs Outputs) (Rule, error) {
 	return Rule{}, nil
 }
 
-func (cmd CmdUpdate) Execute(args []string) (err error) {
+func (cmd CmdUpdate) Execute(_ []string) (err error) {
 	err = globalOpts.ReadConfigfile()
 	if err != nil {
 		return err
